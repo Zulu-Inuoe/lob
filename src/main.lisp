@@ -81,7 +81,8 @@
                ((string= elt "-d")
                 (setf debug-build t
                       cell (cdr cell)))
-               ((string= elt "-v")
+               ((or (string= elt "-v")
+                    (string= elt "--verbose"))
                 (setf verbose t
                       cell (cdr cell)))
                (t
