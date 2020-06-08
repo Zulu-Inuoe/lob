@@ -35,6 +35,9 @@
           :while cell
           :do
              (cond
+               ((string= elt "--version")
+                (format t "1.0.0~%")
+                (return-from cl-user::main 0))
                ((string= elt "-e")
                 (let ((next (cdr cell)))
                   (unless next
