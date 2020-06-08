@@ -131,7 +131,7 @@
     ~A~})
   (error (#1=#:error)
     (format *error-output* \"lob: error while pre-loading:
-  ~~A\" #1#)
+  ~~A~%\" #1#)
     (sb-ext:exit :code 1)))~%" pre-load-forms)))
 
       ;; Get loaded systems
@@ -143,7 +143,7 @@
     ~A~})
   (error (#1=#:error)
     (format *error-output* \"lob: error while loading:
-  ~~A\" #1#)
+  ~~A~%\" #1#)
     (sb-ext:exit :code 1)))~%" load-forms)))
 
       ;; Clear out asdf source registry
@@ -160,7 +160,7 @@
       ;;Verify toplevel symbol exist
       (format *lob-stdout* "
   (unless #1#
-    (format *error-output* \"~~%bootstrap: cannot find toplevel symbol '~A' in package '~A'~~%\")
+    (format *error-output* \"lob: cannot find toplevel symbol '~A' in package '~A'~~%\")
     (finish-output *error-output*)
     (sb-ext:exit :code 1))
 "
@@ -169,7 +169,7 @@
       ;;Verify toplevel symbol is fboundp
       (format *lob-stdout* "
   (unless (fboundp #1#)
-    (format *error-output* \"~~%bootstrap: toplevel symbol '~~A' is not fboundp~~%\" #1#)
+    (format *error-output* \"lob: toplevel symbol '~~A' is not fboundp~~%\" #1#)
     (finish-output *error-output*)
     (sb-ext:exit :code 2))
 ")
