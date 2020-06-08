@@ -194,6 +194,7 @@
   (sb-ext:save-lisp-and-die
     ~S
     :executable t
+    :save-runtime-options t
     :application-type :~:[console~;gui~]
     :toplevel"
               output-path
