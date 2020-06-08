@@ -112,9 +112,6 @@
     (let ((*lob-stdout* (make-broadcast-stream *lob-stdout* f)))
       (format *lob-stdout* "(in-package #:cl-user)~%")
 
-      ;; Mark for lob
-      (format *lob-stdout* "~%(pushnew :lob *features*)~%")
-
       ;; Load ASDF
       (when asdf-p
         (format *lob-stdout* "~%(require \"ASDF\")~%"))
