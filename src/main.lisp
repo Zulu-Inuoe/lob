@@ -35,6 +35,12 @@
           :while cell
           :do
              (cond
+               ((string= elt "--help")
+                (format t "usage: lob [--version] [--help] [-v | --verbose]
+           [-I <path>] [-o <path>] [-g] [-d]
+           [-e | --entry-point [<package>:[:]]<name>] [-s <system-name>]
+           <path>...~2%")
+                (return-from cl-user::main 0))
                ((string= elt "--version")
                 (format t "1.0.0~%")
                 (return-from cl-user::main 0))
