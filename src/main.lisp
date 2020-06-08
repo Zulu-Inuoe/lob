@@ -86,6 +86,9 @@
                     (string= elt "--verbose"))
                 (setf verbose t
                       cell (cdr cell)))
+               ((or (string= elt "-" :end1 (min 1 (length elt)))
+                    (string= elt "--" :end1 (min 2 (length elt))))
+                (lose (format nil "unknown option: ~A" elt)))
                (t
                 (push elt loaded-things)
                 (setf cell (cdr cell))))
