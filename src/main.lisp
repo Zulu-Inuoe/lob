@@ -38,7 +38,8 @@
                ((string= elt "--version")
                 (format t "1.0.0~%")
                 (return-from cl-user::main 0))
-               ((string= elt "-e")
+               ((or (string= elt "-e")
+                    (string= elt "--entry-point"))
                 (let ((next (cdr cell)))
                   (unless next
                     (lose (format nil "missing argument for ~A" elt)))
