@@ -1,4 +1,4 @@
-(in-package #:lob)
+(in-package #:com.inuoe.lob)
 
 (defun executable-find (command)
   "Attempt to find the executable corresponding to `command'."

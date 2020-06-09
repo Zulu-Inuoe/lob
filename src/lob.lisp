@@ -1,11 +1,11 @@
-(defpackage #:lob
+(defpackage #:com.inuoe.lob
   (:use #:cl)
   (:export
    #:*lob-stdout*
    #:*lob-stderr*
    #:build))
 
-(in-package #:lob)
+(in-package #:com.inuoe.lob)
 
 (defvar *lob-stdout* (make-synonym-stream '*standard-output*))
 (defvar *lob-stderr* (make-synonym-stream '*error-output*))

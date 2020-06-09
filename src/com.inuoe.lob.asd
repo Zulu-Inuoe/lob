@@ -1,4 +1,4 @@
-(defsystem #:lob
+(defsystem #:com.inuoe.lob
   :version "1.0.0"
   :description "A command-line tool for building"
   :author "Wilfredo Velázquez-Rodríguez <zulu.inuoe@gmail.com>"
