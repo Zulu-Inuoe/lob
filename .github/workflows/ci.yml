@@ -1,0 +1,39 @@
+name: ci
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.os }} build
+    strategy:
+      matrix:
+        os: [ windows-latest ]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Cache SBCL
+        id: cache-sbcl
+        uses: actions/cache@v2
+        with:
+          path: ~\sbcl\
+          key: ${{ runner.os }}-sbcl
+
+      - name: Install SBCL
+        if: steps.cache-sbcl.outputs.cache-hit != 'true'
+        run: |
+          $uri = "http://downloads.sourceforge.net/sbcl/sbcl-2.0.0-x86-64-windows-binary.msi"
+          Invoke-WebRequest -Uri $uri -OutFile "$env:TEMP\sbcl.msi" -UserAgent "_"
+          Start-Process "msiexec" -ArgumentList "/a", "$env:TEMP\sbcl.msi", "/qbn", "TARGETDIR=$env:TEMP\sbcl\" -Wait -NoNewWindow
+          $sbclSubDir = "$env:TEMP\sbcl\PFiles\Steel Bank Common Lisp\2.0.0\"
+          Move-Item -Path $sbclSubDir -Destination "$HOME\sbcl\"
+
+      - name: Configure SBCL
+        run: |
+          echo "::set-env name=SBCL_HOME::$HOME\sbcl\"
+          echo "::add-path::$HOME\sbcl\"
+
+      - name: make
+        shell: cmd
+        run: call make.bat

@@ -18,7 +18,7 @@
  --disable-debugger^
  --eval "(require ""ASDF\"")"^
  --eval "(asdf:load-asd #p""%LOB_ASD%\"")"^
- --eval "(asdf:load-system '#:lob)"^
+ --eval "(asdf:load-system '#:com.inuoe.lob)"^
  --eval "%BUILD_EXP%"
 
 @endlocal

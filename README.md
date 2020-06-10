@@ -1,5 +1,8 @@
 # lob
+
 A command-line build tool for Common Lisp
+
+[![Actions Status](https://github.com/Zulu-Inuoe/lob/workflows/ci/badge.svg)](https://github.com/Zulu-Inuoe/lob/actions)
 
 ## Why
 
