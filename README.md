@@ -15,18 +15,19 @@ I've found myself writing similar tools in various projects and I think it's tim
 - [x] `:lob` in `*features*` when building specified files
 - [ ] ASDF package-inferred-systems support [1]
 - [ ] REPL/Development mode [2]
-- [ ] SLIME/Sly integration [3]
+- [ ] [SLIME][SLIME]/[Sly][Sly] integration [3]
 - [ ] Inferred entry point [4]
 - [ ] Versioning support [5]
 - [ ] Project generation
 - [ ] Build without ASDF [6]
+- [ ] Slynk/Swank support [7]
 
 [1] I'd like to ~~hijack~~use ASDF package-inferred-systems in order to automatically load dependent systems implied by a lisp file specifically given to `lob`
 This would allow a single file `pong.lisp` and have it automatically load dependencies without an explicit defsystem
 
 [2] Spin up a repl with the given ASDF configuration, loaded systems, and initial package(?)
 
-[3] Slin up SLIME/Sly with the given development environment in a 'simple' way (a meta file ala qlot?)
+[3] Slin up [SLIME][SLIME]/[Sly][Sly] with the given development environment in a 'simple' way (a meta file ala qlot?)
 
 [4] It might make sense to be smarter about inferring an entry point. Currently, `cl-user::main` is the default, with the assumption that a `main.lisp` file guarded behind a `:if-feature :lob` defines `cl-user::main`
 Instead, we could use the given loaded files to figure out a reasonable package name.
@@ -66,6 +67,11 @@ It's worth investigating to see if a user-wide, version-aware system registry is
 [6] It should be possible to make ASDF-less builds, even when the things to load are systems.
 This can be accomplished by using ASDF to generate a load plan or bundle, and ask the new image to load that.
 
+[7] It should be possible to have lob 'hoist' the resulting executable with [swank][SLIME]/[slynk][Sly] support.
+This should be possible not just for debugging and interactive development (the REPL feature is better in this case), but for further development once an application is deployed.
+
+Of course users can manually configure such a server in their application logic, but this is boilerplate that can be automated at the build level instead.
+
 # Other Projects
 
 You're likely better off using one of these instead, which do similar (and far more) of the same:
@@ -79,6 +85,8 @@ You're likely better off using one of these instead, which do similar (and far m
 # License
 See [LICENSE](LICENSE.txt)
 
+[SLIME]: [https://common-lisp.net/project/slime/]
+[Sly]: [https://github.com/joaotavora/sly]
 [Quicklisp]: https://www.quicklisp.org/
 [Ultralisp]: https://ultralisp.org/
 [Qlot]: https://github.com/fukamachi/qlot
