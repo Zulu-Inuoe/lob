@@ -77,7 +77,7 @@
            <path>...~2%")
                   (return-from cl-user::main 0))
                  ("--version"
-                  (format t "1.0.0~%")
+                  (format t "0.1.0~%")
                   (return-from cl-user::main 0))
                  (("-e" "--entry-point")
                   (setf (values toplevel-package-name toplevel-symbol-name)
