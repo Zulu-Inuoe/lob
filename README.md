@@ -21,6 +21,8 @@ I've found myself writing similar tools in various projects and I think it's tim
 - [ ] Project generation
 - [ ] Build without ASDF [6]
 - [ ] Slynk/Swank support [7]
+- [ ] Shrinkwrapping & statically linking libraries to SBCL
+- [ ] Utilities for dealing with native libraries (building/packaging?)
 
 [1] I'd like to ~~hijack~~use ASDF package-inferred-systems in order to automatically load dependent systems implied by a lisp file specifically given to `lob`
 This would allow a single file `pong.lisp` and have it automatically load dependencies without an explicit defsystem
