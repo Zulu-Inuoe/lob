@@ -19,6 +19,7 @@ I've found myself writing similar tools in various projects and I think it's tim
 - [ ] Inferred entry point [4]
 - [ ] Versioning support [5]
 - [ ] Project generation
+- [ ] Build without ASDF [6]
 
 [1] I'd like to ~~hijack~~use ASDF package-inferred-systems in order to automatically load dependent systems implied by a lisp file specifically given to `lob`
 This would allow a single file `pong.lisp` and have it automatically load dependencies without an explicit defsystem
@@ -61,6 +62,9 @@ A full project-local approach has some advantages in isolation, but some disadva
 Second, the `qlot` environment is 'married' to Quicklisp in this scheme
 
 It's worth investigating to see if a user-wide, version-aware system registry is viable, perhaps running on top of qlot (as the `.qlot/` directory is not a fundamental design feature of [Qlot][Qlot] itself.
+
+[6] It should be possible to make ASDF-less builds, even when the things to load are systems.
+This can be accomplished by using ASDF to generate a load plan or bundle, and ask the new image to load that.
 
 # Other Projects
 
