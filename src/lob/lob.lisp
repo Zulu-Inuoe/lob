@@ -88,6 +88,9 @@
                 image core loaded-things gui toplevel-symbol-name toplevel-package-name
                 output-path debug-build compression additional-source-registry asdf-p
                 format-error)
+  (unless loaded-things
+    (error "Must specify at least one thing to load"))
+
   ;; truename-ize all the paths
   (setf image (or image (first sb-ext:*posix-argv*))
         core (and core (truename core))
