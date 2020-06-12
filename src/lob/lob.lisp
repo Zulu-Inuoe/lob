@@ -37,7 +37,7 @@
 
 (defgeneric need-asdf-p (thing)
   (:method ((thing lisp-file))
-    nil)
+    t)
   (:method ((thing asd-file))
     t)
   (:method ((thing system-name))
@@ -55,7 +55,12 @@
 (defgeneric thing-loader (thing)
   (:method ((thing lisp-file))
     (list
-     (format nil "(let ((*features* (cons :lob *features*))) (load ~S))" (slot-value thing 'path))))
+     (format nil "(progn
+      (mapc #'asdf:load-system (asdf/package-inferred-system::package-inferred-system-file-dependencies ~S))
+      (let ((*features* (cons :lob *features*)))
+        (load ~S)))"
+             (slot-value thing 'path)
+             (slot-value thing 'path))))
   (:method ((thing asd-file))
     (list
      (format nil "(progn
