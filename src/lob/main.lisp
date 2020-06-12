@@ -44,12 +44,12 @@
          (symbol-name (subseq name name-start)))
     (values package-name symbol-name)))
 
-(defun cl-user::main (argv)
+(defun main (argv)
   (flet ((lose (str &rest args)
            (apply #'format *error-output* str args)
            (finish-output *standard-output*)
            (finish-output *error-output*)
-           (return-from cl-user::main 1)))
+           (return-from main 1)))
     (loop
       :with toplevel-package-name := nil
       :with toplevel-symbol-name := nil
@@ -75,10 +75,10 @@
            [-I <path>] [-o <path>] [-g] [-d] [--format-error <format-string>]
            [-e | --entry-point [<package>:[:]]<name>] [-l <system-name>]
            <path>...~2%")
-              (return-from cl-user::main 0))
+              (return-from main 0))
              ("--version"
               (format t "0.1.0~%")
-              (return-from cl-user::main 0))
+              (return-from main 0))
              (("-e" "--entry-point")
               (setf (values toplevel-package-name toplevel-symbol-name)
                     (parse-entry-name (take-arg))))

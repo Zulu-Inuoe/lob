@@ -76,6 +76,14 @@
                (string (slot-value thing 'name))
                (symbol (string-downcase (slot-value thing 'name))))))))
 
+(defgeneric thing-implied-package-name (thing)
+  (:method ((thing lisp-file))
+    (string-upcase (pathname-name (slot-value thing 'path))))
+  (:method ((thing asd-file))
+    (string-upcase (pathname-name (slot-value thing 'path))))
+  (:method ((thing system-name))
+    (string-upcase (slot-value thing 'name))))
+
 (defun build (&key
                 image core loaded-things gui toplevel-symbol-name toplevel-package-name
                 output-path debug-build compression additional-source-registry asdf-p
@@ -86,7 +94,7 @@
         loaded-things (mapcar #'resolve-thing (if (consp loaded-things) loaded-things (list loaded-things) ))
         toplevel-symbol-name (or toplevel-symbol-name "MAIN")
         toplevel-symbol-name (string toplevel-symbol-name)
-        toplevel-package-name (or toplevel-package-name  "COMMON-LISP-USER")
+        toplevel-package-name (or toplevel-package-name (thing-implied-package-name (car (last loaded-things))))
         toplevel-package-name (string toplevel-package-name)
         output-path (or output-path "a.exe")
         additional-source-registry (mapcar #'uiop:ensure-directory-pathname additional-source-registry)
