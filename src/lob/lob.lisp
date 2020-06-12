@@ -146,8 +146,7 @@
       ;; Pre-load any deps
       (let ((pre-load-forms (mapcan #'thing-preloader loaded-things)))
         (when pre-load-forms
-          (format *lob-stdout* "
-(handler-case
+          (format *lob-stdout* "~%(handler-case
   (progn~{
     ~A~})
   (error (#1=#:error)
@@ -158,8 +157,7 @@
       ;; Get loaded systems
       (let ((load-forms (mapcan #'thing-loader loaded-things)))
         (when load-forms
-          (format *lob-stdout* "
-(handler-case
+          (format *lob-stdout* "~%(handler-case
   (progn~{
     ~A~})
   (error (#1=#:error)
@@ -175,8 +173,7 @@
       (format *lob-stdout* "~%(ensure-directories-exist ~S)~%" output-path)
 
       ;; Try and find the toplevel symbol
-      (format *lob-stdout* "
-(let ((#1=#:toplevel-sym (find-symbol ~S ~S)))" toplevel-symbol-name toplevel-package-name)
+      (format *lob-stdout* "~%(let ((#1=#:toplevel-sym (find-symbol ~S ~S)))" toplevel-symbol-name toplevel-package-name)
 
       ;;Verify toplevel symbol exist
       (format *lob-stdout* "
@@ -188,17 +185,13 @@
               toplevel-symbol-name toplevel-package-name)
 
       ;;Verify toplevel symbol is fboundp
-      (format *lob-stdout* "
-  (unless (fboundp #1#)
+      (format *lob-stdout* "~%  (unless (fboundp #1#)
     (format *error-output* \"lob: toplevel symbol '~~A' is not fboundp~~%\" #1#)
     (finish-output *error-output*)
-    (sb-ext:exit :code 2))
-")
+    (sb-ext:exit :code 2))~%")
 
       (when debug-build
-        (format *lob-stdout* "
-  (sb-ext:enable-debugger)
-"))
+        (format *lob-stdout* "~%  (sb-ext:enable-debugger)~%"))
 
       ;; Flush output streams
       (format *lob-stdout* "
