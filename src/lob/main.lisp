@@ -50,79 +50,76 @@
            (finish-output *standard-output*)
            (finish-output *error-output*)
            (return-from cl-user::main 1)))
-    (handler-case
-        (loop
-          :with toplevel-package-name := nil
-          :with toplevel-symbol-name := nil
-          :with loaded-things := ()
-          :with output-path := nil
-          :with gui := nil
-          :with include-directories := ()
-          :with debug-build := nil
-          :with format-error := t
-          :with verbose := nil
-          :with cell := (cdr argv)
-          :for elt := (car cell)
-          :while cell
-          :do
-             (flet ((take-arg ()
-                      (setf cell (cdr cell))
-                      (unless cell
-                        (lose "lob: missing argument for ~A" elt))
-                      (car cell)))
-               (string-case elt
-                 ("--help"
-                  (format t "usage: lob [--version] [--help] [-v | --verbose]
+    (loop
+      :with toplevel-package-name := nil
+      :with toplevel-symbol-name := nil
+      :with loaded-things := ()
+      :with output-path := nil
+      :with gui := nil
+      :with include-directories := ()
+      :with debug-build := nil
+      :with format-error := t
+      :with verbose := nil
+      :with cell := (cdr argv)
+      :for elt := (car cell)
+      :while cell
+      :do
+         (flet ((take-arg ()
+                  (setf cell (cdr cell))
+                  (unless cell
+                    (lose "lob: missing argument for ~A" elt))
+                  (car cell)))
+           (string-case elt
+             ("--help"
+              (format t "usage: lob [--version] [--help] [-v | --verbose]
            [-I <path>] [-o <path>] [-g] [-d] [--format-error <format-string>]
            [-e | --entry-point [<package>:[:]]<name>] [-l <system-name>]
            <path>...~2%")
-                  (return-from cl-user::main 0))
-                 ("--version"
-                  (format t "0.1.0~%")
-                  (return-from cl-user::main 0))
-                 (("-e" "--entry-point")
-                  (setf (values toplevel-package-name toplevel-symbol-name)
-                        (parse-entry-name (take-arg))))
-                 ("-g"
-                  (setf gui t))
-                 ("-o"
-                  (setf output-path (take-arg)))
-                 ("-l"
-                  (push (make-instance 'system-name :name (take-arg)) loaded-things))
-                 ("-I"
-                  (push (truename (uiop:ensure-directory-pathname (take-arg))) include-directories))
-                 ("-d"
-                  (setf debug-build t))
-                 ("--format-error"
-                  (setf format-error
-                        (let ((arg (take-arg)))
-                          (cond
-                            ((string-equal arg "true") t)
-                            ((string-equal arg "false") nil)
-                            (t arg)))))
-                 (("-v" "--verbose")
-                  (setf verbose t))
-                 (t
-                  (when (or (string= elt "-" :end1 (min 1 (length elt)))
-                            (string= elt "--" :end1 (min 2 (length elt))))
-                    (lose "lob: unknown option: ~A" elt))
-                  (push elt loaded-things)))
+              (return-from cl-user::main 0))
+             ("--version"
+              (format t "0.1.0~%")
+              (return-from cl-user::main 0))
+             (("-e" "--entry-point")
+              (setf (values toplevel-package-name toplevel-symbol-name)
+                    (parse-entry-name (take-arg))))
+             ("-g"
+              (setf gui t))
+             ("-o"
+              (setf output-path (take-arg)))
+             ("-l"
+              (push (make-instance 'system-name :name (take-arg)) loaded-things))
+             ("-I"
+              (push (truename (uiop:ensure-directory-pathname (take-arg))) include-directories))
+             ("-d"
+              (setf debug-build t))
+             ("--format-error"
+              (setf format-error
+                    (let ((arg (take-arg)))
+                      (cond
+                        ((string-equal arg "true") t)
+                        ((string-equal arg "false") nil)
+                        (t arg)))))
+             (("-v" "--verbose")
+              (setf verbose t))
+             (t
+              (when (or (string= elt "-" :end1 (min 1 (length elt)))
+                        (string= elt "--" :end1 (min 2 (length elt))))
+                (lose "lob: unknown option: ~A" elt))
+              (push elt loaded-things)))
 
-               (setf cell (cdr cell)))
-          :finally
-             (setf include-directories (nreverse include-directories)
-                   loaded-things (nreverse loaded-things))
-             (unless loaded-things
-               (lose "lob: no input files"))
-             (return (let ((*lob-stdout* (if verbose *standard-output* (make-broadcast-stream))))
-                       (build :image (executable-find "sbcl")
-                              :gui gui
-                              :toplevel-symbol-name toplevel-symbol-name
-                              :toplevel-package-name toplevel-package-name
-                              :loaded-things loaded-things
-                              :output-path output-path
-                              :debug-build debug-build
-                              :format-error format-error
-                              :additional-source-registry include-directories))))
-      (error (e)
-        (lose "lob: ~A" e)))))
+           (setf cell (cdr cell)))
+      :finally
+         (setf include-directories (nreverse include-directories)
+               loaded-things (nreverse loaded-things))
+         (unless loaded-things
+           (lose "lob: no input files"))
+         (return (let ((*lob-stdout* (if verbose *standard-output* (make-broadcast-stream))))
+                   (build :image (executable-find "sbcl")
+                          :gui gui
+                          :toplevel-symbol-name toplevel-symbol-name
+                          :toplevel-package-name toplevel-package-name
+                          :loaded-things loaded-things
+                          :output-path output-path
+                          :debug-build debug-build
+                          :format-error format-error
+                          :additional-source-registry include-directories))))))
