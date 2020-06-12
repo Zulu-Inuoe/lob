@@ -73,7 +73,8 @@
 
 (defun build (&key
                 image core loaded-things gui toplevel-symbol-name toplevel-package-name
-                output-path debug-build compression additional-source-registry asdf-p)
+                output-path debug-build compression additional-source-registry asdf-p
+                format-error)
   ;; truename-ize all the paths
   (setf image (or image (first sb-ext:*posix-argv*))
         core (and core (truename core))
@@ -84,7 +85,12 @@
         toplevel-package-name (string toplevel-package-name)
         output-path (or output-path "a.exe")
         additional-source-registry (mapcar #'uiop:ensure-directory-pathname additional-source-registry)
-        asdf-p (or asdf-p (not (null additional-source-registry)) (some #'need-asdf-p loaded-things)))
+        asdf-p (or asdf-p (not (null additional-source-registry)) (some #'need-asdf-p loaded-things))
+        format-error (cond
+                       ((stringp format-error)
+                        format-error)
+                       (format-error
+                        "Error: ~A~%")))
 
   ;; Create the output directory so we can resolve it via truename as well
 
@@ -216,8 +222,10 @@
         (sb-sys:interactive-interrupt (#4=#:error)
          (declare (ignore #4#))
          (sb-ext:exit :code 1 :abort t))
-        (error ()
-          (sb-ext:exit :code 1 :abort t))))"))
+        (error (#4#)~@[
+          (format *error-output* ~S #4#)~]
+          (sb-ext:exit :code 1 :abort t))))"
+                  format-error))
 
       (when compression
         (format *lob-stdout* "

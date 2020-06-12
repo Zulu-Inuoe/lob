@@ -59,6 +59,7 @@
           :with gui := nil
           :with include-directories := ()
           :with debug-build := nil
+          :with format-error := t
           :with verbose := nil
           :with cell := (cdr argv)
           :for elt := (car cell)
@@ -72,7 +73,7 @@
                (string-case elt
                  ("--help"
                   (format t "usage: lob [--version] [--help] [-v | --verbose]
-           [-I <path>] [-o <path>] [-g] [-d]
+           [-I <path>] [-o <path>] [-g] [-d] [--format-error <format-string>]
            [-e | --entry-point [<package>:[:]]<name>] [-l <system-name>]
            <path>...~2%")
                   (return-from cl-user::main 0))
@@ -92,6 +93,13 @@
                   (push (truename (uiop:ensure-directory-pathname (take-arg))) include-directories))
                  ("-d"
                   (setf debug-build t))
+                 ("--format-error"
+                  (setf format-error
+                        (let ((arg (take-arg)))
+                          (cond
+                            ((string-equal arg "true") t)
+                            ((string-equal arg "false") nil)
+                            (t arg)))))
                  (("-v" "--verbose")
                   (setf verbose t))
                  (t
@@ -114,6 +122,7 @@
                               :loaded-things loaded-things
                               :output-path output-path
                               :debug-build debug-build
+                              :format-error format-error
                               :additional-source-registry include-directories))))
       (error (e)
         (lose "lob: ~A" e)))))
