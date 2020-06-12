@@ -190,9 +190,6 @@
     (finish-output *error-output*)
     (sb-ext:exit :code 2))~%")
 
-      (when debug-build
-        (format *lob-stdout* "~%  (sb-ext:enable-debugger)~%"))
-
       ;; Flush output streams
       (format *lob-stdout* "
   (finish-output *standard-output*)
@@ -216,6 +213,7 @@
           ;; that'll prevent the debugger from triggering
           (format *lob-stdout* "
     (lambda ()
+      (sb-ext:enable-debugger)
       (let* ((#2=#:result (funcall #1# *posix-argv*))
              (#3=#:result-code (if (integerp #2#) #2# (if #2# 0 1))))
         (sb-ext:exit :code #3# :abort nil)))")
