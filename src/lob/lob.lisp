@@ -121,16 +121,15 @@
   (when core
     (format *lob-stdout* "lob: using core ~A~2%" core))
 
-  (when loaded-things
-    (format *lob-stdout* "~2&lob: loading:~{~&~T~A~}~%" loaded-things))
+  (format *lob-stdout* "lob: loading:~%~{~T~A~%~}~%" loaded-things)
 
-  (format *lob-stdout* "~2&lob: outputting executable as ~A~%" output-path)
+  (format *lob-stdout* "lob: outputting executable as ~A~%" output-path)
   (format *lob-stdout* "lob: application is ~:[CONSOLE~;GUI~]~%" gui)
   (format *lob-stdout* "lob: toplevel is ~A::~A~%" toplevel-package-name toplevel-symbol-name)
 
   (uiop:with-temporary-file (:stream f :pathname p :direction :output)
     (format *lob-stdout* "~%lob: creating bootstrap at ~A~%" (namestring p))
-    (format *lob-stdout* "~2&==BEGIN BOOTSTRAP CODE==~2%")
+    (format *lob-stdout* "~%==BEGIN BOOTSTRAP CODE==~2%")
     (let ((*lob-stdout* (make-broadcast-stream *lob-stdout* f)))
       (format *lob-stdout* "(in-package #:cl-user)~%")
 
@@ -251,7 +250,7 @@
 
       ;;Finish output to the file
       (finish-output *lob-stdout*))
-    (format *lob-stdout* "~2&==END BOOTSTRAP CODE==~2%")
+    (format *lob-stdout* "~%==END BOOTSTRAP CODE==~2%")
     (let ((sbcl-args (list
                       (when core "--core")
                       (when core (namestring core))
@@ -263,10 +262,10 @@
                       "--load" (namestring p)
                       "--eval" "(exit :code 1)")))
       (setf sbcl-args (delete nil sbcl-args))
-      (format *lob-stdout* "lob: sbcl args:~{~&  ~A~}~%" sbcl-args)
+      (format *lob-stdout* "lob: sbcl args:~%~{  ~A~%~}" sbcl-args)
 
       (let (code)
-        (format *lob-stdout* "~2&==BEGIN BOOTSTRAP==~2%")
+        (format *lob-stdout* "~%==BEGIN BOOTSTRAP==~2%")
 
         (finish-output *lob-stdout*)
         (finish-output *lob-stderr*)
@@ -279,7 +278,7 @@
                 :output *lob-stdout*
                 :error *lob-stderr*)))
 
-        (format *lob-stdout* "~2&==END BOOTSTRAP==~2%")
+        (format *lob-stdout* "~%==END BOOTSTRAP==~2%")
 
         (unless (zerop code)
           (format *lob-stderr* "lob: bootstrapping failed, exited with code ~A~%" code)
