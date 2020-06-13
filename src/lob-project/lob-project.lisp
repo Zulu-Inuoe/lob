@@ -55,7 +55,7 @@
   (with-open-file (lisp-file (uiop:merge-pathnames* (make-pathname :name name :type "lisp") dir)
                              :direction :output :external-format :utf-8)
     (format lisp-file "(defpackage #:~A
-  :use (#:cl))
+  (:use #:cl))
 
 (in-package #:~A)
 "
