@@ -13,12 +13,12 @@ I've found myself writing similar tools in various projects and I think it's tim
 - [x] Build SBCL executables specifying systems/files & entry point
 - [x] Specify ASDF 'include' path (-I)
 - [x] `:lob` in `*features*` when building specified files
-- [ ] ASDF package-inferred-systems support [1]
+- [x] ASDF package-inferred-systems support [1]
 - [ ] REPL/Development mode [2]
 - [ ] [SLIME][SLIME]/[Sly][Sly] integration [3]
-- [ ] Inferred entry point [4]
+- [x] Inferred entry point [4]
 - [ ] Versioning support [5]
-- [ ] Project generation
+- [?] Project generation
 - [ ] Build without ASDF [6]
 - [ ] Slynk/Swank support [7]
 - [ ] Shrinkwrapping & statically linking libraries to SBCL
