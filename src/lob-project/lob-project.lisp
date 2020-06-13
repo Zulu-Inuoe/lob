@@ -28,7 +28,7 @@
            (values nil name)))
         prefix.name (if prefix (concatenate 'string prefix "." name) name)
         author (or author (format nil "~A~@[ <~A>~]" (user-full-name) (user-mail-address)))
-        license (or license ""))
+        license (or license "CC0 1.0 Universal"))
 
   (ensure-directories-exist dir)
   (with-open-file (asd-file (uiop:merge-pathnames* (make-pathname :name prefix.name :type "asd") dir)
