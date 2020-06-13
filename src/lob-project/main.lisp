@@ -41,8 +41,8 @@
            (string-case elt
              ("--help"
               (format t "usage: lob-project [--version] [--help]
-           [-n <name>] [-a <author>] [-l <license>] [-d <description>]
-           <dir>~%")
+                   [-n <name>] [-a <author>] [-l <license>] [-d <description>]
+                  <dir>~%")
               (return-from main 0))
              ("--version"
               (format t "0.1.0~%")
