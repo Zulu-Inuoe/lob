@@ -6,4 +6,4 @@
   :components ((:file "lob-project")
                (:file "main" :if-feature :lob))
   :depends-on
-  ())
+  (#:uiop))

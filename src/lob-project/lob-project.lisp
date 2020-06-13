@@ -3,6 +3,16 @@
 
 (in-package #:com.inuoe.lob-project)
 
+(defun user-full-name ()
+  "Try to infer the current user's name from their git setting or $USER or $USERNAME"
+  (or (ignore-errors (string-trim '(#\Newline) (uiop:run-program '("git" "config" "user.name") :output :string)))
+      (uiop:getenv "USER")
+      (uiop:getenv "USERNAME")))
+
+(defun user-mail-address ()
+  "Try to infer the current user's e-mail from their git config"
+  (ignore-errors (string-trim '(#\Newline) (uiop:run-program '("git" "config" "user.email") :output :string))))
+
 (defun make-project (dir &key name prefix author license &aux prefix.name)
   (setf dir (uiop:ensure-directory-pathname dir)
         name (or name (car (last (pathname-directory dir))))
@@ -17,7 +27,7 @@
           (t
            (values nil name)))
         prefix.name (if prefix (concatenate 'string prefix "." name) name)
-        author (or author "")
+        author (or author (format nil "~A~@[ <~A>~]" (user-full-name) (user-mail-address)))
         license (or license ""))
 
   (ensure-directories-exist dir)
