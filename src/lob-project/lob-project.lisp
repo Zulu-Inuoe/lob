@@ -33,7 +33,7 @@
 
   (ensure-directories-exist dir)
   (with-open-file (asd-file (uiop:merge-pathnames* (make-pathname :name prefix.name :type "asd") dir)
-                            :direction :output)
+                            :direction :output :external-format :utf-8)
     (format asd-file "(defsystem #:~A
   :version \"0.0.1\"
   :description \"~A\"
@@ -53,7 +53,7 @@
             name))
 
   (with-open-file (lisp-file (uiop:merge-pathnames* (make-pathname :name name :type "lisp") dir)
-                             :direction :output)
+                             :direction :output :external-format :utf-8)
     (format lisp-file "(defpackage #:~A
   :use (#:cl))
 
@@ -64,7 +64,7 @@
 
 
   (with-open-file (main-file (uiop:merge-pathnames* (make-pathname :name "main" :type "lisp") dir)
-                             :direction :output)
+                             :direction :output :external-format :utf-8)
     (format main-file "(in-package #:~A)
 
 (defun main (argv)
