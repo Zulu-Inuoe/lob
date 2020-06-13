@@ -75,9 +75,11 @@ This should be possible not just for debugging and interactive development (the 
 Of course users can manually configure such a server in their application logic, but this is boilerplate that can be automated at the build level instead.
 
 # Things to consider
-A list of other things I want to look at
+
+A list of other things I want to look at:
+
 - [defmain](https://40ants.com/lisp-project-of-the-day/2020/06/0090-defmain.html)
-- [line](https://40ants.com/lisp-project-of-the-day/2020/06/0092-lime.html)
+- [lime](https://40ants.com/lisp-project-of-the-day/2020/06/0092-lime.html)
 
 # Other Projects
 
