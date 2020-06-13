@@ -67,6 +67,6 @@
                              :direction :output)
     (format main-file "(in-package #:~A)
 
-(defun cl-user::main (argv)
+(defun main (argv)
   0)
 " prefix.name)))
