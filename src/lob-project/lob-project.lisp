@@ -41,7 +41,7 @@
   :license \"~A\"
   :components
   ((:file \"~A\")
-   (:file \"main\" :if-feature :lob :depends-on \"~A\"))
+   (:file \"main\" :if-feature :lob :depends-on (\"~A\")))
   :depends-on
   ())
 "
