@@ -27,6 +27,7 @@
           :with dir := nil
           :with name := nil
           :with prefix := nil
+          :with description := nil
           :with author := nil
           :with license := nil
           :with cell := (cdr argv)
@@ -41,7 +42,7 @@
                (string-case elt
                  ("--help"
                   (format t "usage: lob-project [--version] [--help]
-           [-n <name>] [-a <author>] [-l <license>]
+           [-n <name>] [-a <author>] [-l <license>] [-d <description>]
            <dir>~%")
                   (return-from main 0))
                  ("--version"
@@ -53,12 +54,15 @@
                   (setf author (take-arg)))
                  ("-l"
                   (setf license (take-arg)))
+                 ("-d"
+                  (setf description (take-arg)))
                  (t
                   (setf dir elt)))
                (setf cell (cdr cell)))
           :finally
              (unless dir
                (lose "lob-project: missing output directory"))
-             (return (make-project dir :name name :prefix prefix :author author :license license)))
+             (return (make-project dir :name name :prefix prefix :description description
+                                       :author author :license license)))
       (error (e)
         (lose "lob-project: ~A" e)))))

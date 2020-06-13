@@ -13,7 +13,7 @@
   "Try to infer the current user's e-mail from their git config"
   (ignore-errors (string-trim '(#\Newline) (uiop:run-program '("git" "config" "user.email") :output :string))))
 
-(defun make-project (dir &key name prefix author license &aux prefix.name)
+(defun make-project (dir &key name description prefix author license &aux prefix.name)
   (setf dir (uiop:ensure-directory-pathname dir)
         name (or name (car (last (pathname-directory dir))))
         (values prefix name)
@@ -27,6 +27,7 @@
           (t
            (values nil name)))
         prefix.name (if prefix (concatenate 'string prefix "." name) name)
+        description (or description name)
         author (or author (format nil "~A~@[ <~A>~]" (user-full-name) (user-mail-address)))
         license (or license "CC0 1.0 Universal"))
 
@@ -35,7 +36,7 @@
                             :direction :output)
     (format asd-file "(defsystem #:~A
   :version \"0.0.1\"
-  :description \"\"
+  :description \"~A\"
   :author \"~A\"
   :license \"~A\"
   :components
@@ -45,6 +46,7 @@
   ())
 "
             prefix.name
+            description
             author
             license
             name
