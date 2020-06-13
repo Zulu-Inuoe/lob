@@ -10,7 +10,7 @@
 @set LOB_EXE_E=%LOB_EXE:\=\\%
 
 @set BUILD_EXP=^
-(if (com.inuoe.lob:build :image \"sbcl\" :loaded-things \"%LOB_ASD_E%\" :output-path \"%LOB_EXE_E%\")^
+(if (com.inuoe.lob:build :image \"sbcl\" :loaded-things \"%LOB_ASD_E%\" :output-path \"%LOB_EXE_E%\" :format-error t)^
   (sb-ext:exit :code 0)^
   (sb-ext:exit :code 1))
 
