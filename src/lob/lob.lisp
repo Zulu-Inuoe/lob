@@ -228,8 +228,8 @@
         (sb-sys:interactive-interrupt (#4=#:error)
          (declare (ignore #4#))
          (sb-ext:exit :code 1 :abort t))
-        (error (#4#)~@[
-          (format *error-output* ~S #4#)~]
+        (error (#4#)
+          ~:[(declare (ignore #4#))~;~:*(format *error-output* ~S #4#)~]
           (sb-ext:exit :code 1 :abort t))))"
                   format-error))
 
