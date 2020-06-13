@@ -22,47 +22,44 @@
            (finish-output *standard-output*)
            (finish-output *error-output*)
            (return-from main 1)))
-    (handler-case
-        (loop
-          :with dir := nil
-          :with name := nil
-          :with prefix := nil
-          :with description := nil
-          :with author := nil
-          :with license := nil
-          :with cell := (cdr argv)
-          :for elt := (car cell)
-          :while cell
-          :do
-             (flet ((take-arg ()
-                      (setf cell (cdr cell))
-                      (unless cell
-                        (lose "lob-project: missing argument for ~A" elt))
-                      (car cell)))
-               (string-case elt
-                 ("--help"
-                  (format t "usage: lob-project [--version] [--help]
+    (loop
+      :with dir := nil
+      :with name := nil
+      :with prefix := nil
+      :with description := nil
+      :with author := nil
+      :with license := nil
+      :with cell := (cdr argv)
+      :for elt := (car cell)
+      :while cell
+      :do
+         (flet ((take-arg ()
+                  (setf cell (cdr cell))
+                  (unless cell
+                    (lose "lob-project: missing argument for ~A" elt))
+                  (car cell)))
+           (string-case elt
+             ("--help"
+              (format t "usage: lob-project [--version] [--help]
            [-n <name>] [-a <author>] [-l <license>] [-d <description>]
            <dir>~%")
-                  (return-from main 0))
-                 ("--version"
-                  (format t "0.1.0~%")
-                  (return-from main 0))
-                 ("-n"
-                  (setf name (take-arg)))
-                 ("-a"
-                  (setf author (take-arg)))
-                 ("-l"
-                  (setf license (take-arg)))
-                 ("-d"
-                  (setf description (take-arg)))
-                 (t
-                  (setf dir elt)))
-               (setf cell (cdr cell)))
-          :finally
-             (unless dir
-               (lose "lob-project: missing output directory"))
-             (return (make-project dir :name name :prefix prefix :description description
-                                       :author author :license license)))
-      (error (e)
-        (lose "lob-project: ~A" e)))))
+              (return-from main 0))
+             ("--version"
+              (format t "0.1.0~%")
+              (return-from main 0))
+             ("-n"
+              (setf name (take-arg)))
+             ("-a"
+              (setf author (take-arg)))
+             ("-l"
+              (setf license (take-arg)))
+             ("-d"
+              (setf description (take-arg)))
+             (t
+              (setf dir elt)))
+           (setf cell (cdr cell)))
+      :finally
+         (unless dir
+           (lose "lob-project: missing output directory"))
+         (return (make-project dir :name name :prefix prefix :description description
+                                   :author author :license license)))))
