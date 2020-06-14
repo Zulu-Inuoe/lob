@@ -3,9 +3,204 @@
   (:export
    #:*lob-stdout*
    #:*lob-stderr*
-   #:build))
+   #:build)
+  (:import-from
+   #:alexandria
+   #:assoc-value
+   #:required-argument
+   #:eswitch)
+  (:import-from #:uiop))
 
 (in-package #:com.inuoe.lob)
+
+(defun lob-dir ()
+  (uiop:merge-pathnames* (make-pathname :directory '(:relative ".lob"))
+                         (user-homedir-pathname)))
+
+(defun package-directory (name version)
+  (uiop:merge-pathnames*
+   (make-pathname :directory (list :relative "packages" (concatenate 'string name "_" version)))
+   (lob-dir)))
+
+(defgeneric source-name (source))
+
+(defclass source ()
+  ((name
+    :reader source-name
+    :initarg :name)
+   (options
+    :reader source-options
+    :initarg :options))
+  (:default-initargs
+   :name (required-argument :name)
+   :options (required-argument :options)))
+
+(defclass dist-source (source)
+  ((dist
+    :reader source-dist
+    :initarg :dist))
+  (:default-initargs
+   :dist (required-argument :dist)))
+
+(defclass uri-source (source)
+  ((version
+    :initarg :version
+    :reader source-version))
+  (:default-initargs
+   :version (required-argument :version)))
+
+(defclass http-source (uri-source)
+  ())
+
+(defclass git-source (uri-source)
+  ())
+
+(defclass file-source (uri-source)
+  ())
+
+(defun dist-versions-from-url (url)
+  (let ((temp (qmerge "tmp/dist-versions.txt"))
+        (versions '())
+        (url (ql::available-versions-url "org.borodust.bodge")))
+    (when url
+      (ensure-directories-exist temp)
+      (delete-file-if-exists temp)
+      (handler-case
+          (fetch url temp)
+        (unexpected-http-status ()
+          (return-from available-versions nil)))
+      (with-open-file (stream temp)
+        (loop for line = (read-line stream nil)
+              while line do
+                (destructuring-bind (version url)
+                    (split-spaces line)
+                  (setf versions (acons version url versions)))))
+      versions)))
+
+(defmethod available-versions ((dist dist))
+  )
+
+(defun available-dist-versions (dist)
+  (etypecase dist
+    (string )))
+
+(defun parse-uri (value)
+  (puri:parse-uri value))
+
+(defun parse-version (value)
+  (uiop:parse-version value 'error))
+
+(defun parse-dist (value)
+  value)
+
+(defun coerce-action (name value)
+  (eswitch (name :test #'string=)
+    ("url" (cons :url (parse-uri value)))
+    ("uri" (cons :url (parse-uri value)))
+    ("version" (cons :version (parse-version value)))
+    ("dist" (cons :dist (parse-dist value)))))
+
+;; TODO - Warn or error on lines containing junk
+(defun collect-options (options-str)
+  "Parse `options-str' into a list of options"
+  (let ((options ()))
+    (cl-ppcre:do-register-groups (opt-name opt-value)
+        ("\\s*(.*?):\\s+\"(.*?)\"" options-str (nreverse options) :sharedp t)
+      (push (coerce-action opt-name opt-value) options))))
+
+(defun make-source (name options)
+  (let ((url (assoc-value options :url)))
+    (if url
+        (let ((version (assoc-value options :version)))
+          (unless version
+            (error "Using url ~A requires specifying a version" url))
+
+          (make-instance (ecase (puri:uri-scheme url)
+                           ((:http :https) 'http-source)
+                           ((:git) 'git-source)
+                           ((:file) 'file-source))
+                         :name name
+                         :version version
+                         :options options))
+        (make-instance 'dist-source :name name :options options
+                                    :dist (assoc-value options :dist)))))
+
+(defun parse-lob-line (line)
+  (or
+   (cl-ppcre:register-groups-bind (directive name options)
+       ("^(.+?)\\s+\"(.*?)\"\\s*(.*)$" line :sharedp nil)
+     (unless (string= directive "lob")
+       (error "Unknown directive ~A" directive))
+     (make-source name (collect-options options)))
+   (error "invalid line '~A'" line)))
+
+(defun parse-lobfile (path)
+  "Parse a lobfile"
+  (with-open-file (stream path :external-format :utf-8)
+    (loop
+      :for line := (read-line stream nil nil)
+      :while line
+      :unless (or (zerop (length line))
+                  (char= (char line 0) #\;))
+        :collect (parse-lob-line line))))
+
+(defgeneric install-source (source directory))
+
+(defmethod install-source ((source source) directory)
+  (let ((dist-versions (ql:available-dist-versions (source-dist source)))))
+  (error "unimplemented"))
+
+(defmethod install-source ((source http-source) directory)
+  (error "unimplemented"))
+
+(defmethod install-source ((source git-source) directory)
+  (error "unimplemented"))
+
+(defmethod install-source ((source file-source) directory)
+  (error "unimplemented"))
+
+(defun resolve-version (source)
+  (let ((version (assoc-value (source-options source) :version)))
+    (or version
+        (error "TBD - get latest version number from QL"))))
+
+(defun ensure-source-installed (source)
+  (let ((dir (package-directory (source-name source) (resolve-version source))))
+    (unless (uiop:directory-exists-p dir)
+      (install-source source dir))))
+
+(defclass registry-entry ()
+  ((name
+    :initarg :name
+    :reader entry-name)
+   (version-constraint
+    :initarg :version
+    :reader entry-version-constraint))
+  (:default-initargs
+   :name (required-argument :name)))
+
+(defun get-fetch-fn (uri)
+  (assoc-value ql-http:*fetch-scheme-functions* (puri:uri-scheme uri)
+               :test #'string-equal))
+
+(defclass dist (ql-dist:dist)
+  ())
+
+(defun dist-from-url (dist-url)
+  (setf dist-url (puri:uri dist-url))
+  (uiop:with-temporary-file (:pathname file :external-format :utf-8)
+    (let ((fetch-fn (get-fetch-fn dist-url)))
+      (unless fetch-fn
+        (error "Unknown scheme ~S" dist-url))
+      (funcall fetch-fn (puri:render-uri dist-url nil) file))
+    ;; TODO Internal fn
+    (ql-dist::make-dist-from-file file :class 'ql-dist:dist)))
+
+(defun install-lobfile (path)
+
+  (let ((registry (make-hash-table)))
+    )
+  (mapc #'install-source (parse-lobfile path)))
 
 (defvar *lob-stdout* (make-synonym-stream '*standard-output*))
 (defvar *lob-stderr* (make-synonym-stream '*error-output*))
