@@ -54,19 +54,11 @@
 
   (with-open-file (lisp-file (uiop:merge-pathnames* (make-pathname :name name :type "lisp") dir)
                              :direction :output :external-format :utf-8)
-    (format lisp-file "(defpackage #:~A
-  (:use #:cl))
-
-(in-package #:~A)
-"
+    (format lisp-file "(defpackage #:~A~%  (:use #:cl))~%~%(in-package #:~A)~%"
             prefix.name
             prefix.name))
 
 
   (with-open-file (main-file (uiop:merge-pathnames* (make-pathname :name "main" :type "lisp") dir)
                              :direction :output :external-format :utf-8)
-    (format main-file "(in-package #:~A)
-
-(defun main (argv)
-  0)
-" prefix.name)))
+    (format main-file "(in-package #:~A)~%~%(defun main (argv)~%  0)~%" prefix.name)))
