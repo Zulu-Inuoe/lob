@@ -1,7 +1,12 @@
 (defpackage #:com.inuoe.lob-project
-  (:use #:cl))
+  (:use #:cl)
+  (:export
+   #:*lob-project-stdout*
+   #:make-project))
 
 (in-package #:com.inuoe.lob-project)
+
+(defvar *lob-project-stdout* (make-synonym-stream '*standard-output*))
 
 (defun user-full-name ()
   "Try to infer the current user's name from their git setting or $USER or $USERNAME"
@@ -30,6 +35,9 @@
         description (or description name)
         author (or author (format nil "~A~@[ <~A>~]" (user-full-name) (user-mail-address)))
         license (or license "CC0 1.0 Universal"))
+
+  (format *lob-project-stdout* "Creating project in directory ~A" dir)
+  (format *lob-project-stdout* "  name:~A~%  prefix: ~A~%" name prefix)
 
   (ensure-directories-exist dir)
   (with-open-file (asd-file (uiop:merge-pathnames* (make-pathname :name prefix.name :type "asd") dir)

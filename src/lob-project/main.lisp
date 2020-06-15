@@ -29,6 +29,7 @@
       :with description := nil
       :with author := nil
       :with license := nil
+      :with verbose := nil
       :with cell := (cdr argv)
       :for elt := (car cell)
       :while cell
@@ -55,11 +56,14 @@
               (setf license (take-arg)))
              ("-d"
               (setf description (take-arg)))
+             (("-v" "--verbose")
+              (setf verbose t))
              (t
               (setf dir elt)))
            (setf cell (cdr cell)))
       :finally
          (unless dir
            (lose "lob-project: missing output directory"))
-         (return (make-project dir :name name :prefix prefix :description description
-                                   :author author :license license)))))
+         (let ((*lob-project-stdout* (if verbose *standard-output* (make-broadcast-stream))))
+           (return (make-project dir :name name :prefix prefix :description description
+                                     :author author :license license))))))
