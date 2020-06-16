@@ -78,7 +78,9 @@
 
 (defgeneric thing-implied-package-name (thing)
   (:method ((thing lisp-file))
-    (string-upcase (pathname-name (slot-value thing 'path))))
+    (or (ignore-errors (let* ((form (asdf/package-inferred-system::file-defpackage-form (slot-value thing 'path))))
+                         (string (second form))))
+        (string-upcase (pathname-name (slot-value thing 'path)))))
   (:method ((thing asd-file))
     (string-upcase (pathname-name (slot-value thing 'path))))
   (:method ((thing system-name))
