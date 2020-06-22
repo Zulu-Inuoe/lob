@@ -69,4 +69,4 @@
 
   (with-open-file (main-file (uiop:merge-pathnames* (make-pathname :name "main" :type "lisp") dir)
                              :direction :output :external-format :utf-8)
-    (format main-file "(in-package #:~A)~%~%(defun main (argv)~%  0)~%" prefix.name)))
+    (format main-file "(in-package #:~A)~%~%(defun main (&optional argv)~%  (declare (ignore argv))~%  0)~%" prefix.name)))
