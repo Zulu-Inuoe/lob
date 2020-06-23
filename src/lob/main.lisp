@@ -30,6 +30,63 @@
                             ,@body)))))
                    clauses)))))
 
+(defmacro lose (str &rest args)
+  `(progn
+     (format *error-output* ,str ,@args)
+     (finish-output *standard-output*)
+     (finish-output *error-output*)
+     (return 1)))
+
+(defparameter *lob-new-usage* "usage: lob new [--version] [--help]
+               [-n <name>] [-a <author>] [-l <license>] [-d <description>]
+               <dir>")
+
+(defun main-new (argv)
+  "Entry point for `new' subcommand"
+  (loop
+    :with dir := nil
+    :with name := nil
+    :with prefix := nil
+    :with description := nil
+    :with author := nil
+    :with license := nil
+    :with verbose := nil
+    :with cell := (cdr argv)
+    :for elt := (car cell)
+    :while cell
+    :do
+       (flet ((take-arg ()
+                (setf cell (cdr cell))
+                (unless cell
+                  (lose "lob new: missing argument for ~A" elt))
+                (car cell)))
+         (string-case elt
+           ("--help"
+            (write-line *lob-new-usage*)
+            (return 0))
+           ("--version"
+            (format t "0.1.0~%")
+            (return 0))
+           ("-n"
+            (setf name (take-arg)))
+           ("-a"
+            (setf author (take-arg)))
+           ("-l"
+            (setf license (take-arg)))
+           ("-d"
+            (setf description (take-arg)))
+           (("-v" "--verbose")
+            (setf verbose t))
+           (t
+            (setf dir elt)))
+         (setf cell (cdr cell)))
+    :finally
+       (unless dir
+         (lose "lob new: missing output directory"))
+       (let ((com.inuoe.lob-new:*lob-new-stdout* (if verbose *standard-output* (make-broadcast-stream))))
+         (return (com.inuoe.lob-new:make-project dir :name name :prefix prefix :description description
+                                                     :author author :license license)))))
+
 (defun parse-entry-name (name)
   (let* ((colon (position #\: name))
          (package-name (if colon (subseq name 0 colon)))
@@ -44,82 +101,92 @@
          (symbol-name (subseq name name-start)))
     (values package-name symbol-name)))
 
-(defun main (argv)
-  (flet ((lose (str &rest args)
-           (apply #'format *error-output* str args)
-           (finish-output *standard-output*)
-           (finish-output *error-output*)
-           (return-from main 1)))
-    (loop
-      :with toplevel-package-name := nil
-      :with toplevel-symbol-name := nil
-      :with loaded-things := ()
-      :with output-path := nil
-      :with gui := nil
-      :with include-directories := ()
-      :with debug-build := nil
-      :with format-error := t
-      :with verbose := nil
-      :with cell := (cdr argv)
-      :for elt := (car cell)
-      :while cell
-      :do
-         (flet ((take-arg ()
-                  (setf cell (cdr cell))
-                  (unless cell
-                    (lose "lob: missing argument for ~A" elt))
-                  (car cell)))
-           (string-case elt
-             ("--help"
-              (format t "usage: lob [--version] [--help] [-v | --verbose]
-           [-I <path>] [-o <path>] [-g] [-d] [--format-error <format-string>]
-           [-e | --entry-point [<package>:[:]]<name>] [-l <system-name>]
-           <path>...~2%")
-              (return-from main 0))
-             ("--version"
-              (format t "0.1.0~%")
-              (return-from main 0))
-             (("-e" "--entry-point")
-              (setf (values toplevel-package-name toplevel-symbol-name)
-                    (parse-entry-name (take-arg))))
-             ("-g"
-              (setf gui t))
-             ("-o"
-              (setf output-path (take-arg)))
-             ("-l"
-              (push (make-instance 'system-name :name (take-arg)) loaded-things))
-             ("-I"
-              (push (truename (uiop:ensure-directory-pathname (take-arg))) include-directories))
-             ("-d"
-              (setf debug-build t))
-             ("--format-error"
-              (setf format-error
-                    (let ((arg (take-arg)))
-                      (cond
-                        ((string-equal arg "true") t)
-                        ((string-equal arg "false") nil)
-                        (t arg)))))
-             (("-v" "--verbose")
-              (setf verbose t))
-             (t
-              (when (or (string= elt "-" :end1 (min 1 (length elt)))
-                        (string= elt "--" :end1 (min 2 (length elt))))
-                (lose "lob: unknown option: ~A" elt))
-              (push elt loaded-things)))
+(defparameter *lob-usage* "usage:
+  lob <command> [flags]
+  lob [--version] [--help] [-v | --verbose]
+      [-I <path>] [-o <path>] [-g] [-d] [--format-error <format-string>]
+      [-e | --entry-point [<package>:[:]]<name>] [-l <system-name>]
+      <path>...")
 
-           (setf cell (cdr cell)))
-      :finally
-         (setf include-directories (nreverse include-directories)
-               loaded-things (nreverse loaded-things))
-         (unless loaded-things
-           (lose "lob: no input files"))
-         (return (let ((*lob-stdout* (if verbose *standard-output* (make-broadcast-stream))))
-                   (build :image (executable-find "sbcl")
-                          :gui gui
-                          :toplevel-symbol-name toplevel-symbol-name
-                          :toplevel-package-name toplevel-package-name
-                          :loaded-things loaded-things
-                          :output-path output-path
-                          :debug-build debug-build
-                          :format-error format-error
-                          :additional-source-registry include-directories))))))
+(defun main-build (argv)
+  "Main entry point for plain lob command"
+  (loop
+    :with toplevel-package-name := nil
+    :with toplevel-symbol-name := nil
+    :with loaded-things := ()
+    :with output-path := nil
+    :with gui := nil
+    :with include-directories := ()
+    :with debug-build := nil
+    :with format-error := t
+    :with verbose := nil
+    :with cell := (cdr argv)
+    :for elt := (car cell)
+    :while cell
+    :do
+       (flet ((take-arg ()
+                (setf cell (cdr cell))
+                (unless cell
+                  (lose "lob: missing argument for ~A" elt))
+                (car cell)))
+         (string-case elt
+           ("--help"
+            (write-line *lob-usage*)
+            (return 0))
+           ("--version"
+            (format t "0.1.0~%")
+            (return 0))
+           (("-e" "--entry-point")
+            (setf (values toplevel-package-name toplevel-symbol-name)
+                  (parse-entry-name (take-arg))))
+           ("-g"
+            (setf gui t))
+           ("-o"
+            (setf output-path (take-arg)))
+           ("-l"
+            (push (make-instance 'system-name :name (take-arg)) loaded-things))
+           ("-I"
+            (push (truename (uiop:ensure-directory-pathname (take-arg))) include-directories))
+           ("-d"
+            (setf debug-build t))
+           ("--format-error"
+            (setf format-error
+                  (let ((arg (take-arg)))
+                    (cond
+                      ((string-equal arg "true") t)
+                      ((string-equal arg "false") nil)
+                      (t arg)))))
+           (("-v" "--verbose")
+            (setf verbose t))
+           (t
+            (when (or (string= elt "-" :end1 (min 1 (length elt)))
+                      (string= elt "--" :end1 (min 2 (length elt))))
+              (lose "lob: unknown option: ~A" elt))
+            (push elt loaded-things)))
+
+         (setf cell (cdr cell)))
+    :finally
+       (setf include-directories (nreverse include-directories)
+             loaded-things (nreverse loaded-things))
+       (unless loaded-things
+         (lose "lob: no input files"))
+       (return (let ((*lob-stdout* (if verbose *standard-output* (make-broadcast-stream))))
+                 (build :image (executable-find "sbcl")
+                        :gui gui
+                        :toplevel-symbol-name toplevel-symbol-name
+                        :toplevel-package-name toplevel-package-name
+                        :loaded-things loaded-things
+                        :output-path output-path
+                        :debug-build debug-build
+                        :format-error format-error
+                        :additional-source-registry include-directories)))))
+
+(defun main (argv)
+  (string-case (second argv)
+    ("--help"
+     (write-line *lob-usage*)
+     0)
+    ("new"
+     (main-new (cdr argv)))
+    (t
+     (main-build argv))))

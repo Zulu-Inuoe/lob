@@ -4,6 +4,7 @@
   :author "Wilfredo Velázquez-Rodríguez <zulu.inuoe@gmail.com>"
   :license "MIT"
   :components ((:file "lob")
+               (:file "lob-new")
                (:file "main" :if-feature :lob))
   :depends-on
   ())

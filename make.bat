@@ -26,10 +26,4 @@
  --eval "%BUILD_EXP%"
 @if %errorlevel% neq 0 exit /b %errorlevel%
 
-@set LOB_PROJECT_ASD=%SRC_DIR%lob-project\com.inuoe.lob-project.asd
-@set LOB_PROJECT_EXE=%BIN_DIR%lob-project.exe
-
-%LOB_EXE% %LOB_PROJECT_ASD% -o %LOB_PROJECT_EXE% -v
-@if %errorlevel% neq 0 exit /b %errorlevel%
-
 @endlocal
