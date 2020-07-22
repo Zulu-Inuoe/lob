@@ -36,7 +36,7 @@
         author (or author (format nil "~A~@[ <~A>~]" (user-full-name) (user-mail-address)))
         license (or license "CC0 1.0 Universal"))
 
-  (format *lob-new-stdout* "Creating project in directory ~A" dir)
+  (format *lob-new-stdout* "lob: Creating project in directory ~A" dir)
   (format *lob-new-stdout* "  name:~A~%  prefix: ~A~%" name prefix)
 
   (ensure-directories-exist dir)
