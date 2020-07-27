@@ -23,6 +23,7 @@ I've found myself writing similar tools in various projects and I think it's tim
 - [ ] Slynk/Swank support [7]
 - [ ] Shrinkwrapping & statically linking libraries to SBCL
 - [ ] Utilities for dealing with native libraries (building/packaging?)
+- [ ] More package-inferred-systems magicks [8]
 
 [1] I'd like to ~~hijack~~use ASDF package-inferred-systems in order to automatically load dependent systems implied by a lisp file specifically given to `lob`
 This would allow a single file `pong.lisp` and have it automatically load dependencies without an explicit defsystem
@@ -73,6 +74,9 @@ This can be accomplished by using ASDF to generate a load plan or bundle, and as
 This should be possible not just for debugging and interactive development (the REPL feature is better in this case), but for further development once an application is deployed.
 
 Of course users can manually configure such a server in their application logic, but this is boilerplate that can be automated at the build level instead.
+
+[8] lob works for when there's a single file using package-inferred-systems, but I'd like to be able to come up with a scheme to make use of multi-file situations.
+I'd basically like to be able to define a 'system' as a single lisp file and then depend on it from either a system or a package-inferred-system lisp file.
 
 # Things to consider
 
