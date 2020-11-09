@@ -254,29 +254,27 @@
                                   "--eval" "(exit :code 1)"))))
       (format *lob-stdout* "lob: sbcl args:~%~{  ~A~%~}" sbcl-args)
 
-      (let (code)
-        (format *lob-stdout* "~%==BEGIN BOOTSTRAP==~2%")
+      (format *lob-stdout* "~%==BEGIN BOOTSTRAP==~2%")
 
-        (finish-output *lob-stdout*)
-        (finish-output *lob-stderr*)
-        (setf code
-              (sb-ext:process-exit-code
-               (sb-ext:run-program
-                image sbcl-args
-                :search t
-                :input nil
-                :output *lob-stdout*
-                :error *lob-stderr*)))
+      (finish-output *lob-stdout*)
+      (finish-output *lob-stderr*)
+
+      (let* ((code (sb-ext:process-exit-code
+                    (sb-ext:run-program
+                     image sbcl-args
+                     :search t
+                     :input nil
+                     :output *lob-stdout*
+                     :error *lob-stderr*)))
+             (success (zerop code)))
 
         (format *lob-stdout* "~%==END BOOTSTRAP==~2%")
 
-        (prog1
-            (cond
-              ((zerop code)
-               (format *lob-stdout* "lob: compilation finished~%")
-               t)
-              (t
-               (format *lob-stderr* "lob: bootstrapping failed, exited with code ~A~%" code)
-               nil))
-          (finish-output *lob-stdout*)
-          (finish-output *lob-stderr*))))))
+        (if success
+            (format *lob-stdout* "lob: compilation finished~%")
+            (format *lob-stderr* "lob: bootstrapping failed, exited with code ~A~%" code))
+
+        (finish-output *lob-stdout*)
+        (finish-output *lob-stderr*)
+
+        (values success code)))))
