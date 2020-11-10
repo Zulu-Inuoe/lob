@@ -2,7 +2,7 @@
 
 @set SRC_DIR=%~dp0src\
 @set BIN_DIR=%~dp0bin\
-@set LOB_ASD=%SRC_DIR%lob\com.inuoe.lob.asd
+@set LOB_ASD=%SRC_DIR%com.inuoe.lob.asd
 @set LOB_EXE=%BIN_DIR%lob.exe
 
 @rem Escape backslashes for SBCL string literals
