@@ -5,6 +5,6 @@
   :license "MIT"
   :components ((:file "lob-build")
                (:file "lob-new")
-               (:file "main" :depends-on ("lob-build" "lob-new")))
+               (:file "lob" :depends-on ("lob-build" "lob-new")))
   :depends-on
   ())
