@@ -215,7 +215,7 @@
           (format *lob-stdout* "
     (lambda ()
       (sb-ext:enable-debugger)
-      (let* ((#2=#:result (funcall #1# *posix-argv*))
+      (let* ((#2=#:result (apply #1# *posix-argv*))
              (#3=#:result-code (if (integerp #2#) #2# (if #2# 0 1))))
         (sb-ext:exit :code #3# :abort nil)))")
 
@@ -223,7 +223,7 @@
           (format *lob-stdout* "
     (lambda ()
       (handler-case
-        (let ((#2=#:result (funcall #1# *posix-argv*)))
+        (let ((#2=#:result (apply #1# *posix-argv*)))
           (sb-ext:exit :code (if (integerp #2#) #2# (if #2# 0 1)) :abort nil))
         (sb-sys:interactive-interrupt ()
           (sb-ext:exit :code #x-3FFFFEC6 :abort t))

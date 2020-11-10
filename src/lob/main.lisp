@@ -181,7 +181,7 @@
                         :format-error format-error
                         :additional-source-registry include-directories)))))
 
-(defun main (argv)
+(defun main (&rest argv)
   (string-case (second argv)
     ("--help"
      (write-line *lob-usage*)
