@@ -3,8 +3,8 @@
   :description "A command-line tool for building"
   :author "Wilfredo Velázquez-Rodríguez <zulu.inuoe@gmail.com>"
   :license "MIT"
-  :components ((:file "lob")
+  :components ((:file "lob-build")
                (:file "lob-new")
-               (:file "main" :if-feature :lob))
+               (:file "main" :depends-on ("lob-build" "lob-new")))
   :depends-on
   ())

@@ -1,3 +1,13 @@
+(defpackage #:com.inuoe.lob
+  (:use #:cl)
+  (:import-from #:com.inuoe.lob-build)
+  (:import-from #:com.inuoe.lob-new)
+  (:local-nicknames
+   (#:build #:com.inuoe.lob-build)
+   (#:new #:com.inuoe.lob-new))
+  (:export
+   #:main))
+
 (in-package #:com.inuoe.lob)
 
 (defun executable-find (command)
@@ -83,8 +93,8 @@
     :finally
        (unless dir
          (lose "lob new: missing output directory"))
-       (let ((com.inuoe.lob-new:*lob-new-stdout* (if verbose *standard-output* (make-broadcast-stream))))
-         (return (com.inuoe.lob-new:make-project dir :name name :prefix prefix :description description
+       (let ((new:*lob-new-stdout* (if verbose *standard-output* (make-broadcast-stream))))
+         (return (new:make-project dir :name name :prefix prefix :description description
                                                      :author author :license license)))))
 
 (defun parse-entry-name (name)
@@ -144,7 +154,7 @@
            ("-o"
             (setf output-path (take-arg)))
            ("-l"
-            (push (make-instance 'system-name :name (take-arg)) loaded-things))
+            (push (make-instance 'build:system-name :name (take-arg)) loaded-things))
            ("-I"
             (push (truename (uiop:ensure-directory-pathname (take-arg))) include-directories))
            ("-d"
@@ -170,8 +180,8 @@
              loaded-things (nreverse loaded-things))
        (unless loaded-things
          (lose "lob: no input files"))
-       (return (let ((*lob-stdout* (if verbose *standard-output* (make-broadcast-stream))))
-                 (build :image (executable-find "sbcl")
+       (return (let ((build:*lob-stdout* (if verbose *standard-output* (make-broadcast-stream))))
+                 (build:build :image (executable-find "sbcl")
                         :gui gui
                         :toplevel-symbol-name toplevel-symbol-name
                         :toplevel-package-name toplevel-package-name
