@@ -2,9 +2,11 @@
   (:use #:cl)
   (:import-from #:com.inuoe.lob-build)
   (:import-from #:com.inuoe.lob-new)
+  (:import-from #:com.inuoe.lob-test)
   (:local-nicknames
    (#:build #:com.inuoe.lob-build)
-   (#:new #:com.inuoe.lob-new))
+   (#:new #:com.inuoe.lob-new)
+   (#:test #:com.inuoe.lob-test))
   (:export
    #:main))
 
@@ -189,7 +191,76 @@
                         :output-path output-path
                         :debug-build debug-build
                         :format-error format-error
-                        :additional-source-registry include-directories)))))
+                              :additional-source-registry include-directories)))))
+
+(defun main-run (argv)
+  "Main entry point for run lob command"
+  (loop
+    :with toplevel-package-name := nil
+    :with toplevel-symbol-name := nil
+    :with loaded-things := ()
+    :with include-directories := ()
+    :with debug := nil
+    :with format-error := t
+    :with verbose := nil
+    :with cell := (cdr argv)
+    :for elt := (car cell)
+    :while cell
+    :do
+       (flet ((take-arg ()
+                (setf cell (cdr cell))
+                (unless cell
+                  (lose "lob: missing argument for ~A" elt))
+                (car cell)))
+         (string-case elt
+           ("--help"
+            (write-line *lob-usage*)
+            (return 0))
+           ("--version"
+            (format t "0.1.0~%")
+            (return 0))
+           (("-e" "--entry-point")
+            (setf (values toplevel-package-name toplevel-symbol-name)
+                  (parse-entry-name (take-arg))))
+           ("-l"
+            (push (make-instance 'run:system-name :name (take-arg)) loaded-things))
+           ("-I"
+            (push (truename (uiop:ensure-directory-pathname (take-arg))) include-directories))
+           ("-d"
+            (setf debug t))
+           ("--format-error"
+            (setf format-error
+                  (let ((arg (take-arg)))
+                    (cond
+                      ((string-equal arg "true") t)
+                      ((string-equal arg "false") nil)
+                      (t arg)))))
+           (("-v" "--verbose")
+            (setf verbose t))
+           (t
+            (when (or (string= elt "-" :end1 (min 1 (length elt)))
+                      (string= elt "--" :end1 (min 2 (length elt))))
+              (lose "lob: unknown option: ~A" elt))
+            (push elt loaded-things)
+
+            ;; Start
+            (loop-finish)))
+
+         (setf cell (cdr cell)))
+    :finally
+       (setf include-directories (nreverse include-directories)
+             loaded-things (nreverse loaded-things))
+       (unless loaded-things
+         (lose "lob: no input files"))
+       (return (let ((run:*lob-stdout* (if verbose *standard-output* (make-broadcast-stream))))
+                 (run:run :image "sbcl"
+                          :argv cell
+                          :toplevel-symbol-name toplevel-symbol-name
+                          :toplevel-package-name toplevel-package-name
+                          :loaded-things loaded-things
+                          :debug debug
+                          :format-error format-error
+                          :additional-source-registry include-directories)))))
 
 (defun main (&rest argv)
   (string-case (second argv)
@@ -198,5 +269,7 @@
      0)
     ("new"
      (main-new (cdr argv)))
+    ("run"
+     (main-run (cdr argv)))
     (t
      (main-build argv))))
