@@ -20,13 +20,23 @@
 (defvar *lob-stdout* (make-synonym-stream '*standard-output*))
 (defvar *lob-stderr* (make-synonym-stream '*error-output*))
 
-(defclass lisp-file ()
+(defclass file ()
   ((path
-    :initarg :path)))
+    :type pathname
+    :initarg :path)
+   (relative-to
+    :type pathname
+    :initarg :relative-to
+    :initform (uiop:pathname-directory-pathname *default-pathname-defaults*))))
 
-(defclass asd-file ()
-  ((path
-    :initarg :path)))
+(defun file-pathname (file)
+  (uiop:merge-pathnames* (slot-value file 'path) (slot-value file 'relative-to)))
+
+(defclass lisp-file (file)
+  ())
+
+(defclass asd-file (file)
+  ())
 
 (defclass system-name ()
   ((name
@@ -58,27 +68,29 @@
     nil)
   (:method ((thing asd-file))
     (list
-     (format nil "(asdf:load-asd ~S)" (slot-value thing 'path))))
+     (format nil "(asdf:load-asd ~S)" (file-pathname thing))))
   (:method ((thing system-name))
     nil))
 
 (defgeneric thing-loader (thing)
   (:method ((thing lisp-file))
-    (list
-     (format nil "(progn
+    (let ((path (file-pathname thing)))
+      (list
+       (format nil "(progn
       (mapc #'asdf:load-system (asdf/package-inferred-system::package-inferred-system-file-dependencies ~S))
       (let ((*features* (cons :lob *features*)))
         (load ~S)))"
-             (slot-value thing 'path)
-             (slot-value thing 'path))))
+               path
+               path))))
   (:method ((thing asd-file))
-    (list
-     (format nil "(progn
+    (let ((name (pathname-name (slot-value thing 'path))))
+      (list
+       (format nil "(progn
       (mapc #'asdf:load-system (asdf:component-sideway-dependencies (asdf:find-system ~S)))
       (let ((*features* (cons :lob *features*)))
         (asdf:load-system ~S)))"
-             (pathname-name (slot-value thing 'path))
-             (pathname-name (slot-value thing 'path)))))
+               name
+               name))))
   (:method ((thing system-name))
     (list
      (format nil "(asdf:load-system ~S)"
