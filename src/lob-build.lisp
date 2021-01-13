@@ -152,96 +152,102 @@
   (format *lob-stdout* "lob: application is ~:[CONSOLE~;GUI~]~%" gui)
   (format *lob-stdout* "lob: toplevel is ~A::~A~%" toplevel-package-name toplevel-symbol-name)
 
-  (uiop:with-temporary-file (:stream f :pathname p :direction :output)
-    (format *lob-stdout* "~%lob: creating bootstrap at ~A~%" (namestring p))
-    (format *lob-stdout* "~%==BEGIN BOOTSTRAP CODE==~2%")
-    (let ((*lob-stdout* (make-broadcast-stream *lob-stdout* f)))
-      (format *lob-stdout* "(in-package #:cl-user)~%")
+  (let ((forms ()))
+     ;; Load ASDF
+    (push (format nil "(require \"ASDF\")") forms)
 
-      ;; Load ASDF
-      (format *lob-stdout* "~%(require \"ASDF\")~%")
-
-      (when additional-source-registry
-        (format *lob-stdout* "~%(asdf:initialize-source-registry
+    (when additional-source-registry
+      (push
+       (format nil "(asdf:initialize-source-registry
   '(:source-registry
     :inherit-configuration~{
-    (:tree ~S)~}))~%" additional-source-registry))
+    (:tree ~S)~})%" additional-source-registry)
+       forms))
 
       ;; Pre-load any deps
-      (let ((pre-load-forms (mapcan #'thing-preloader loaded-things)))
-        (when pre-load-forms
-          (format *lob-stdout* "~%(handler-case
+
+    (let ((pre-load-forms (mapcan #'thing-preloader loaded-things)))
+      (when pre-load-forms
+        (push
+         (format nil "(handler-case
   (progn~{
     ~A~})
   (error (error)
     (format *error-output* \"lob: error while pre-loading:~~%  ~~A~~%\" error)
-    (sb-ext:exit :code 1)))~%" pre-load-forms)))
+    (sb-ext:exit :code 1)))" pre-load-forms)
+         forms)))
 
       ;; Get loaded systems
-      (let ((load-forms (mapcan #'thing-loader loaded-things)))
-        (when load-forms
-          (format *lob-stdout* "~%(handler-case
+
+    (let ((load-forms (mapcan #'thing-loader loaded-things)))
+      (when load-forms
+        (push (format nil "(handler-case
   (progn~{
     ~A~})
   (error (error)
     (format *error-output* \"lob: error while loading:~~%  ~~A~~%\" error)
-    (sb-ext:exit :code 1)))~%" load-forms)))
+    (sb-ext:exit :code 1)))" load-forms)
+              forms)))
 
       ;; Clear out asdf source registry
-      (format *lob-stdout* "~%(asdf:clear-source-registry)~%")
+
+    (push "(asdf:clear-source-registry)" forms)
 
       ;; Make sure output directory exists
-      (format *lob-stdout* "~%(ensure-directories-exist ~S)~%" (uiop:pathname-directory-pathname output-path))
+
+    (push (format nil "(ensure-directories-exist ~S)" (uiop:pathname-directory-pathname output-path)) forms)
 
       ;; Try and find the toplevel symbol
-      (format *lob-stdout* "~%(let ((#1=#:toplevel-sym (find-symbol ~S ~S)))" toplevel-symbol-name toplevel-package-name)
 
-      ;;Verify toplevel symbol exist
-      (format *lob-stdout* "
+    (push (with-output-to-string (stream)
+            (format stream "(let ((#1=#:toplevel-sym (find-symbol ~S ~S)))" toplevel-symbol-name toplevel-package-name)
+
+            ;;Verify toplevel symbol exist
+            (format stream "
   (unless #1#
     (format *error-output* \"lob: cannot find toplevel symbol '~A' in package '~A'~~%\")
     (finish-output *error-output*)
     (sb-ext:exit :code 1))
 "
-              toplevel-symbol-name toplevel-package-name)
+                    toplevel-symbol-name toplevel-package-name)
 
-      ;;Verify toplevel symbol is fboundp
-      (format *lob-stdout* "
+            ;;Verify toplevel symbol is fboundp
+            (format stream "
   (unless (fboundp #1#)
     (format *error-output* \"lob: toplevel symbol '~~A' is not fboundp~~%\" #1#)
     (finish-output *error-output*)
     (sb-ext:exit :code 2))
 ")
 
-      ;; Flush output streams
-      (format *lob-stdout* "
+            ;; Flush output streams
+            (format stream "
   (finish-output *standard-output*)
   (finish-output *error-output*)
   (sb-ext:gc :full t)
 ")
 
-      ;;Dump exe
-      (format *lob-stdout* "
+            ;;Dump exe
+            (format stream "
   (sb-ext:save-lisp-and-die
     ~S
     :executable t
     :save-runtime-options t
     :application-type :~:[console~;gui~]
     :toplevel"
-              output-path
-              gui)
+                    output-path
+                    gui)
 
-      (if debug-build
-          ;; If it's a debug build, don't catch toplevel errors since
-          ;; that'll prevent the debugger from triggering
-          (format *lob-stdout* "
+            (if debug-build
+                ;; If it's a debug build, don't catch toplevel errors since
+                ;; that'll prevent the debugger from triggering
+                (format stream "
     (lambda ()
       (sb-ext:enable-debugger)
       (let ((#2=#:result (apply #1# *posix-argv*)))
         (sb-ext:exit :code (if (integerp #2#) #2# (if #2# 0 1)) :abort nil)))")
 
-          ;;Otherwise, catch toplevel errors and exit 1
-          (format *lob-stdout* "
+                ;;Otherwise, catch toplevel errors and exit 1
+                (format stream "
     (lambda ()
       (handler-case
           (let ((#2=#:result (apply #1# *posix-argv*)))
@@ -251,19 +257,22 @@
         (error (~:[~;error~]~:*)~@[
           (format *error-output* ~S error)~]
           (sb-ext:exit :code 1 :abort t))))"
-                  format-error))
+                        format-error))
 
-      (when compression
-        (format *lob-stdout* "
+            (when compression
+              (format stream "
     :compression ~A" compression))
 
-      (format *lob-stdout* "))
-")
+            (format stream "))"))
+          forms)
 
-      ;;Finish output to the file
-      (finish-output *lob-stdout*))
-    (format *lob-stdout* "~%==END BOOTSTRAP CODE==~2%")
-    (let ((sbcl-args (delete nil (list
+    ;; Exit with error if we fall through
+    (push "(exit :code 1)" forms)
+
+    (setf forms (nreverse forms))
+
+
+    (let ((sbcl-args (delete nil (list*
                                   (when core "--core")
                                   (when core (namestring core))
                                   "--noinform"
@@ -271,8 +280,9 @@
                                   "--no-sysinit"
                                   "--no-userinit"
                                   "--disable-debugger"
-                                  "--load" (namestring p)
-                                  "--eval" "(exit :code 1)"))))
+                                  (mapcan (lambda (form)
+                                            (list "--eval" form))
+                                          forms)))))
       (format *lob-stdout* "lob: sbcl args:~%~{  ~A~%~}" sbcl-args)
 
       (format *lob-stdout* "~%==BEGIN BOOTSTRAP==~2%")
