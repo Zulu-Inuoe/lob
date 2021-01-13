@@ -48,7 +48,8 @@
      (return 1)))
 
 (defparameter *lob-new-usage* "usage: lob new [--version] [--help]
-               [-n <name>] [-a <author>] [-l <license>] [-d <description>]
+               [-n <name>] [-a <author>] [-e <email>] [-l <license>]
+               [-d <description>]
                <dir>")
 
 (defun main-new (argv)
@@ -59,6 +60,7 @@
     :with prefix := nil
     :with description := nil
     :with author := nil
+    :with email := nil
     :with license := nil
     :with verbose := nil
     :with cell := (cdr argv)
@@ -81,6 +83,8 @@
             (setf name (take-arg)))
            ("-a"
             (setf author (take-arg)))
+           ("-e"
+            (setf email (take-arg)))
            ("-l"
             (setf license (take-arg)))
            ("-d"
@@ -95,7 +99,7 @@
          (lose "lob new: missing output directory"))
        (let ((new:*lob-new-stdout* (if verbose *standard-output* (make-broadcast-stream))))
          (return (new:make-project dir :name name :prefix prefix :description description
-                                                     :author author :license license)))))
+                                       :author author :email email :license license)))))
 
 (defun parse-entry-name (name)
   (let* ((colon (position #\: name))
@@ -189,7 +193,7 @@
                         :output-path output-path
                         :debug-build debug-build
                         :format-error format-error
-                        :additional-source-registry include-directories)))))
+                              :additional-source-registry include-directories)))))
 
 (defun main (&rest argv)
   (string-case (second argv)
