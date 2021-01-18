@@ -94,6 +94,7 @@ You're likely better off using one of these instead, which do similar (and far m
 * [QuickProject](https://github.com/xach/quickproject)
 * [Qlot][Qlot]
 * [cl-project](https://github.com/fukamachi/cl-project)
+* [clpm](https://gitlab.common-lisp.net/clpm/clpm) ⭐⭐
 
 # License
 See [LICENSE](LICENSE.txt)
