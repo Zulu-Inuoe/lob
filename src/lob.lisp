@@ -186,13 +186,13 @@
          (lose "lob: no input files"))
        (return (let ((build:*lob-stdout* (if verbose *standard-output* (make-broadcast-stream))))
                  (build:build :image (executable-find "sbcl")
-                        :gui gui
-                        :toplevel-symbol-name toplevel-symbol-name
-                        :toplevel-package-name toplevel-package-name
-                        :loaded-things loaded-things
-                        :output-path output-path
-                        :debug-build debug-build
-                        :format-error format-error
+                              :gui gui
+                              :toplevel-symbol-name toplevel-symbol-name
+                              :toplevel-package-name toplevel-package-name
+                              :loaded-things loaded-things
+                              :output-path output-path
+                              :debug-build debug-build
+                              :format-error format-error
                               :additional-source-registry include-directories)))))
 
 (defun main (&rest argv)
