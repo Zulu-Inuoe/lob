@@ -17,6 +17,22 @@
 
 (in-package #:com.inuoe.lob-build)
 
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defun read-file-into-string (pathname)
+    (with-output-to-string (stream)
+      (with-open-file (file pathname)
+        (loop :for line := (read-line file nil)
+              :while line
+              :do (write-line line stream))))))
+
+(defparameter +uiop-src+ #.(read-file-into-string
+                            (uiop:merge-pathnames* (make-pathname :name "uiop" :type "lisp")
+                                                   (uiop:pathname-directory-pathname (or *compile-file-truename* *load-truename* *default-pathname-defaults*)))))
+
+(defparameter +asdf-src+ #.(read-file-into-string
+                            (uiop:merge-pathnames* (make-pathname :name "asdf" :type "lisp")
+                                                   (uiop:pathname-directory-pathname (or *compile-file-truename* *load-truename* *default-pathname-defaults*)))))
+
 (defvar *lob-stdout* (make-synonym-stream '*standard-output*))
 (defvar *lob-stderr* (make-synonym-stream '*error-output*))
 
@@ -156,102 +172,111 @@
   (format *lob-stdout* "lob: application is ~:[CONSOLE~;GUI~]~%" gui)
   (format *lob-stdout* "lob: toplevel is ~A::~A~%" toplevel-package-name toplevel-symbol-name)
 
-  (let ((forms ()))
-     ;; Load ASDF
-    (push (format nil "(require \"ASDF\")") forms)
+  (format *lob-stdout* "~%==BEGIN BOOTSTRAP CODE==~2%")
+  (let ((bootstrap-stream (make-string-output-stream)))
+    (let ((*lob-stdout* (make-broadcast-stream *lob-stdout* bootstrap-stream)))
+      ;; Load UIOP & ASDF
+      (write-string +uiop-src+ *lob-stdout*)
+      (terpri *lob-stdout*)
+      (write-string +asdf-src+ *lob-stdout*)
+      (terpri *lob-stdout*)
 
-    (when additional-source-registry
-      (push
-       (format nil "(asdf:initialize-source-registry
+      (when additional-source-registry
+        (format *lob-stdout* "
+(asdf:initialize-source-registry
   '(:source-registry
     :inherit-configuration~{
-    (:tree ~S)~}))~%" additional-source-registry)
-       forms))
+    (:tree ~S)~}))
+"
+                additional-source-registry))
 
       ;; Pre-load any deps
 
-    (let ((pre-load-forms (mapcan #'thing-preloader loaded-things)))
-      (when pre-load-forms
-        (push
-         (format nil "(handler-case
+      (let ((pre-load-forms (mapcan #'thing-preloader loaded-things)))
+        (when pre-load-forms
+          (format *lob-stdout* "
+(handler-case
   (progn~{
     ~A~})
   (error (error)
     (format *error-output* \"lob: error while pre-loading:~~%  ~~A~~%\" error)
-    (sb-ext:exit :code 1)))" pre-load-forms)
-         forms)))
+    (sb-ext:exit :code 1)))
+"
+                  pre-load-forms)))
 
       ;; Get loaded systems
 
-    (let ((load-forms (mapcan #'thing-loader loaded-things)))
-      (when load-forms
-        (push (format nil "(handler-case
+      (let ((load-forms (mapcan #'thing-loader loaded-things)))
+        (when load-forms
+          (format *lob-stdout* "
+(handler-case
   (progn~{
     ~A~})
   (error (error)
     (format *error-output* \"lob: error while loading:~~%  ~~A~~%\" error)
-    (sb-ext:exit :code 1)))" load-forms)
-              forms)))
+    (sb-ext:exit :code 1)))
+"
+                  load-forms)))
 
       ;; Clear out asdf source registry
 
-    (push "(asdf:clear-source-registry)" forms)
+      (format *lob-stdout* "
+(asdf:clear-source-registry)
+")
 
       ;; Make sure output directory exists
 
-    (push (format nil "(ensure-directories-exist ~S)" (uiop:pathname-directory-pathname output-path)) forms)
+      (format *lob-stdout* "
+(ensure-directories-exist ~S)
+"
+              (uiop:pathname-directory-pathname output-path))
 
       ;; Try and find the toplevel symbol
 
-    (push (with-output-to-string (stream)
-            (format stream "(let ((symbol (find-symbol ~S ~S)))" toplevel-symbol-name toplevel-package-name)
-
-            ;;Verify toplevel symbol exist
-            (format stream "
+      (format *lob-stdout* "
+(let ((symbol (find-symbol ~S ~S)))
+  ;;Verify toplevel symbol exist
   (unless symbol
     (format *error-output* \"lob: cannot find toplevel symbol '~A' in package '~A'~~%\")
     (finish-output *error-output*)
     (sb-ext:exit :code 1))
-"
-                    toplevel-symbol-name toplevel-package-name)
 
-            ;;Verify toplevel symbol is fboundp
-            (format stream "
+   ;;Verify toplevel symbol is fboundp
   (unless (fboundp symbol)
     (format *error-output* \"lob: toplevel symbol '~~A' is not fboundp~~%\" symbol)
     (finish-output *error-output*)
     (sb-ext:exit :code 2))
-")
 
-            ;; Flush output streams
-            (format stream "
+   ;; Flush output streams
   (finish-output *standard-output*)
   (finish-output *error-output*)
   (sb-ext:gc :full t)
-")
 
-            ;;Dump exe
-            (format stream "
+  ;;Dump exe
   (sb-ext:save-lisp-and-die
     ~S
     :executable t
     :save-runtime-options t
     :application-type :~:[console~;gui~]
     :toplevel"
-                    output-path
-                    gui)
+              toplevel-symbol-name
+              toplevel-package-name
+              toplevel-symbol-name
+              toplevel-package-name
+              output-path
+              gui)
 
-            (if debug-build
-                ;; If it's a debug build, don't catch toplevel errors since
-                ;; that'll prevent the debugger from triggering
-                (format stream "
+      (if debug-build
+          ;; If it's a debug build, don't catch toplevel errors since
+          ;; that'll prevent the debugger from triggering
+          (format *lob-stdout* "
     (lambda ()
       (sb-ext:enable-debugger)
       (let ((return (apply symbol sb-ext:*posix-argv*)))
         (sb-ext:exit :code (if (integerp return) return (if return 0 1)) :abort nil)))")
 
-                ;;Otherwise, catch toplevel errors and exit 1
-                (format stream "
+          ;;Otherwise, catch toplevel errors and exit 1
+          (format *lob-stdout* "
     (lambda ()
       (handler-case
           (let ((return (apply symbol sb-ext:*posix-argv*)))
@@ -261,33 +286,36 @@
         (error (~:[~;error~]~:*)~@[
           (format *error-output* ~S error)~]
           (sb-ext:exit :code 1 :abort t))))"
-                        format-error))
+                  format-error))
 
-            (when compression
-              (format stream "
+      (when compression
+        (format *lob-stdout* "
     :compression ~A" compression))
 
-            (format stream "))"))
-          forms)
+      (format *lob-stdout* "))
+")
 
-    ;; Exit with error if we fall through
-    (push "(exit :code 1)" forms)
+      ;; Exit with error if we fall through
+      (format *lob-stdout* "
+;; fallback exit if save-lisp-or-die passes
+(sb-ext:exit :code 1)
+"))
 
-    (setf forms (nreverse forms))
+    (format *lob-stdout* "~%==END BOOTSTRAP CODE==~2%")
 
 
-    (let ((sbcl-args (delete nil (list*
+    (let ((sbcl-args (delete nil (list
                                   (when core "--core")
                                   (when core (namestring core))
                                   "--noinform"
+                                  "--disable-ldb"
+                                  "--lose-on-corruption"
                                   "--end-runtime-options"
                                   "--no-sysinit"
                                   "--no-userinit"
-                                  "--disable-debugger"
-                                  (mapcan (lambda (form)
-                                            (list "--eval" form))
-                                          forms)))))
-      (format *lob-stdout* "lob: sbcl args:~%~{~A~%~}" sbcl-args)
+                                  "--noprint"
+                                  "--disable-debugger"))))
+      (format *lob-stdout* "lob: sbcl args:~%~{  ~A~%~}" sbcl-args)
 
       (format *lob-stdout* "~%==BEGIN BOOTSTRAP==~2%")
 
@@ -298,7 +326,7 @@
                     (sb-ext:run-program
                      image sbcl-args
                      :search t
-                     :input nil
+                     :input (make-string-input-stream (get-output-stream-string bootstrap-stream))
                      :output *lob-stdout*
                      :error *lob-stderr*)))
              (success (zerop code)))
