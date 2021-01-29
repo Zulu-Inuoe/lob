@@ -160,7 +160,7 @@
            ("-l"
             (push (make-instance 'build:system-name :name (take-arg)) loaded-things))
            ("-I"
-            (push (truename (uiop:ensure-directory-pathname (take-arg))) include-directories))
+            (push (truename (uiop:parse-native-namestring (take-arg) :ensure-directory t)) include-directories))
            ("-d"
             (setf debug-build t))
            ("--format-error"
