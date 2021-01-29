@@ -168,9 +168,8 @@ See [LICENSE](LICENSE.txt)
     (with-open-file (name_test.lisp (uiop:merge-pathnames* (make-pathname :name name_test :type "lisp") test)
                                     :direction :output :external-format :utf-8)
       (format name_test.lisp "(defpackage #:~A
-  (:use
-   #:cl
-   #:~A)
+  (:use #:cl)
+  (:local-nicknames (#:~A #:~A))
   (:import-from
    #:fiveam
    #:def-suite
@@ -198,6 +197,7 @@ See [LICENSE](LICENSE.txt)
 (in-suite ~A)
 "
               prefix.name_test
+              name
               prefix.name
               name
               prefix.name_test
