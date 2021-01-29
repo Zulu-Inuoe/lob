@@ -283,7 +283,7 @@
                                   (mapcan (lambda (form)
                                             (list "--eval" form))
                                           forms)))))
-      (format *lob-stdout* "lob: sbcl args:~%~{  ~A~%~}" sbcl-args)
+      (format *lob-stdout* "lob: sbcl args:~%~{~A~%~}" sbcl-args)
 
       (format *lob-stdout* "~%==BEGIN BOOTSTRAP==~2%")
 
