@@ -253,7 +253,7 @@
           (let ((#2=#:result (apply #1# sb-ext:*posix-argv*)))
             (sb-ext:exit :code (if (integerp #2#) #2# (if #2# 0 1)) :abort nil))
         (sb-sys:interactive-interrupt ()
-          (sb-ext:exit :code #x-3FFFFEC6 :abort t))
+          (sb-ext:exit :code -1073741510 :abort t))
         (error (~:[~;error~]~:*)~@[
           (format *error-output* ~S error)~]
           (sb-ext:exit :code 1 :abort t))))"
