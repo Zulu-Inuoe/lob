@@ -102,7 +102,7 @@
   (:method ((thing lisp-file))
     (or (ignore-errors (let* ((form (asdf/package-inferred-system::file-defpackage-form (slot-value thing 'path))))
                          (string (second form))))
-        (string-upcase (pathname-name (slot-value thing 'path)))))
+        "CL-USER"))
   (:method ((thing asd-file))
     (string-upcase (pathname-name (slot-value thing 'path))))
   (:method ((thing system-name))
