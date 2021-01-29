@@ -189,8 +189,7 @@ See [LICENSE](LICENSE.txt)
 
 (defun main (&rest argv)
   (declare (ignore argv))
-  (let ((result (fiveam:run '~A)))
-    (if result 0 -1)))
+  (if (fiveam:run '~A) 0 1))
 
 (def-suite ~A
   :description \"Tests for ~A.\")
