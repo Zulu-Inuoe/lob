@@ -116,7 +116,10 @@
   (unless loaded-things
     (error "Must specify at least one thing to load"))
 
-  (setf image (or image (first sb-ext:*posix-argv*))
+  (setf image (etypecase image
+                (string (uiop:parse-native-namestring image))
+                (pathname image)
+                (null sb-ext:*runtime-pathname*))
         core (etypecase core
                (string (uiop:parse-native-namestring core))
                (pathname core)
