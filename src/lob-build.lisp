@@ -165,7 +165,7 @@
        (format nil "(asdf:initialize-source-registry
   '(:source-registry
     :inherit-configuration~{
-    (:tree ~S)~})%" additional-source-registry)
+    (:tree ~S)~}))~%" additional-source-registry)
        forms))
 
       ;; Pre-load any deps
