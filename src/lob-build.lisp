@@ -100,8 +100,9 @@
 
 (defgeneric thing-implied-package-name (thing)
   (:method ((thing lisp-file))
-    (or (ignore-errors (let* ((form (asdf/package-inferred-system::file-defpackage-form (slot-value thing 'path))))
-                         (string (second form))))
+    (or (ignore-errors (let ((form (asdf/package-inferred-system::file-defpackage-form (slot-value thing 'path))))
+                         (and form
+                              (string (second form)))))
         "CL-USER"))
   (:method ((thing asd-file))
     (string-upcase (pathname-name (slot-value thing 'path))))
