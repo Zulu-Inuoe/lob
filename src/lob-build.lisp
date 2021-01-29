@@ -200,11 +200,11 @@
       ;; Try and find the toplevel symbol
 
     (push (with-output-to-string (stream)
-            (format stream "(let ((#1=#:toplevel-sym (find-symbol ~S ~S)))" toplevel-symbol-name toplevel-package-name)
+            (format stream "(let ((symbol (find-symbol ~S ~S)))" toplevel-symbol-name toplevel-package-name)
 
             ;;Verify toplevel symbol exist
             (format stream "
-  (unless #1#
+  (unless symbol
     (format *error-output* \"lob: cannot find toplevel symbol '~A' in package '~A'~~%\")
     (finish-output *error-output*)
     (sb-ext:exit :code 1))
@@ -213,8 +213,8 @@
 
             ;;Verify toplevel symbol is fboundp
             (format stream "
-  (unless (fboundp #1#)
-    (format *error-output* \"lob: toplevel symbol '~~A' is not fboundp~~%\" #1#)
+  (unless (fboundp symbol)
+    (format *error-output* \"lob: toplevel symbol '~~A' is not fboundp~~%\" symbol)
     (finish-output *error-output*)
     (sb-ext:exit :code 2))
 ")
@@ -243,15 +243,15 @@
                 (format stream "
     (lambda ()
       (sb-ext:enable-debugger)
-      (let ((#2=#:result (apply #1# sb-ext:*posix-argv*)))
-        (sb-ext:exit :code (if (integerp #2#) #2# (if #2# 0 1)) :abort nil)))")
+      (let ((return (apply symbol sb-ext:*posix-argv*)))
+        (sb-ext:exit :code (if (integerp return) return (if return 0 1)) :abort nil)))")
 
                 ;;Otherwise, catch toplevel errors and exit 1
                 (format stream "
     (lambda ()
       (handler-case
-          (let ((#2=#:result (apply #1# sb-ext:*posix-argv*)))
-            (sb-ext:exit :code (if (integerp #2#) #2# (if #2# 0 1)) :abort nil))
+          (let ((return (apply symbol sb-ext:*posix-argv*)))
+            (sb-ext:exit :code (if (integerp return) return (if return 0 1)) :abort nil))
         (sb-sys:interactive-interrupt ()
           (sb-ext:exit :code -1073741510 :abort t))
         (error (~:[~;error~]~:*)~@[
