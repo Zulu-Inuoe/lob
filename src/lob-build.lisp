@@ -77,7 +77,7 @@
     (let ((path (file-pathname thing)))
       (list
        (format nil "(progn
-      (mapc #'asdf:load-system (asdf/package-inferred-system::package-inferred-system-file-dependencies ~S))
+      (mapc #'asdf:load-system (ignore-errors (asdf/package-inferred-system::package-inferred-system-file-dependencies ~S)))
       (let ((*features* (cons :lob *features*)))
         (load ~S)))"
                path
