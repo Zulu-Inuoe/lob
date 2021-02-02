@@ -16,9 +16,12 @@
 
 @sbcl^
  --noinform^
+ --disable-ldb^
+ --lose-on-corruption^
  --end-runtime-options^
  --no-sysinit^
  --no-userinit^
+ --noprint^
  --disable-debugger^
  --load "%SRC_DIR%uiop.lisp"^
  --load "%SRC_DIR%asdf.lisp"^
