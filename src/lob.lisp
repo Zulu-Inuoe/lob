@@ -1,14 +1,13 @@
-(defpackage #:com.inuoe.lob
+(defpackage #:com.inuoe.lob/lob
+  (:nicknames #:com.inuoe.lob)
   (:use #:cl)
-  (:import-from #:com.inuoe.lob-build)
-  (:import-from #:com.inuoe.lob-new)
   (:local-nicknames
-   (#:build #:com.inuoe.lob-build)
-   (#:new #:com.inuoe.lob-new))
+   (#:things #:com.inuoe.lob/things)
+   (#:build #:com.inuoe.lob/commands/build)
+   (#:new #:com.inuoe.lob/commands/new))
   (:export
    #:main))
-
-(in-package #:com.inuoe.lob)
+(in-package #:com.inuoe.lob/lob)
 
 (defun executable-find (command)
   "Attempt to find the executable corresponding to `command'."
@@ -25,6 +24,7 @@
                                  outstring)))))
 
 (defmacro string-case (value &body clauses)
+  "As `case', using `string=' rather than `eql'."
   (let ((value-sym (gensym "VALUE")))
     `(let ((,value-sym ,value))
        (cond
@@ -41,6 +41,11 @@
                    clauses)))))
 
 (defmacro lose (str &rest args)
+  "Use `format' to `*error-output*' using `str' with `args', and `return' 1.
+
+ eg.
+  (lose \"unrecognized argument ~A\" foo)
+"
   `(progn
      (format *error-output* ,str ,@args)
      (finish-output *standard-output*)
@@ -53,7 +58,7 @@
                <dir>")
 
 (defun main-new (argv)
-  "Entry point for `new' subcommand"
+  "Entry point for `new' subcommand."
   (loop
     :with dir := nil
     :with name := nil
@@ -102,8 +107,15 @@
                                        :author author :email email :license license)))))
 
 (defun parse-entry-name (name)
+  "Parses out `name' into a package and symbol name.
+
+ eg.
+  symbol          => nil, symbol
+  package:symbol  => package, symbol
+  package::symbol => package, symbol
+"
   (let* ((colon (position #\: name))
-         (package-name (if colon (subseq name 0 colon)))
+         (package-name (when colon (subseq name 0 colon)))
          (name-start (if colon
                          (let ((second-colon (position #\: name :start (1+ colon))))
                            (if second-colon
@@ -123,7 +135,7 @@
       <path>...")
 
 (defun main-build (argv)
-  "Main entry point for plain lob command"
+  "Main entry point for plain lob command."
   (loop
     :with toplevel-package-name := nil
     :with toplevel-symbol-name := nil
@@ -158,7 +170,7 @@
            ("-o"
             (setf output-path (take-arg)))
            ("-l"
-            (push (make-instance 'build:system-name :name (take-arg)) loaded-things))
+            (push (make-instance 'things:system-name :name (take-arg)) loaded-things))
            ("-I"
             (push (truename (uiop:parse-native-namestring (take-arg) :ensure-directory t)) include-directories))
            ("-d"
@@ -184,16 +196,16 @@
              loaded-things (nreverse loaded-things))
        (unless loaded-things
          (lose "lob: no input files"))
-       (return (let ((build:*lob-stdout* (if verbose *standard-output* (make-broadcast-stream))))
-                 (build:build :image (executable-find "sbcl")
-                              :gui gui
-                              :toplevel-symbol-name toplevel-symbol-name
-                              :toplevel-package-name toplevel-package-name
-                              :loaded-things loaded-things
-                              :output-path output-path
-                              :debug-build debug-build
-                              :format-error format-error
-                              :additional-source-registry include-directories)))))
+       (return (build:build :image (executable-find "sbcl")
+                            :gui gui
+                            :toplevel-symbol-name toplevel-symbol-name
+                            :toplevel-package-name toplevel-package-name
+                            :loaded-things loaded-things
+                            :output-path output-path
+                            :debug-build debug-build
+                            :format-error format-error
+                            :additional-source-registry include-directories
+                            :verbose verbose))))
 
 (defun main (&rest argv)
   (string-case (second argv)

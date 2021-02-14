@@ -3,10 +3,8 @@
   :description "A command-line tool for building"
   :author "Wilfredo Velázquez-Rodríguez <zulu.inuoe@gmail.com>"
   :license "MIT"
+  :class :package-inferred-system
   :components ((:static-file "uiop.lisp")
-               (:static-file "asdf.lisp" :depends-on ("uiop.lisp"))
-               (:file "lob-build" :depends-on ("uiop.lisp" "asdf.lisp"))
-               (:file "lob-new")
-               (:file "lob" :depends-on ("lob-build" "lob-new")))
+               (:static-file "asdf.lisp"))
   :depends-on
-  ())
+  (#:com.inuoe.lob/lob))

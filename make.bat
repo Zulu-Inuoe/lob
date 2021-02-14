@@ -10,7 +10,7 @@
 @set LOB_EXE_E=%LOB_EXE:\=\\%
 
 @set BUILD_EXP=^
-(if (com.inuoe.lob-build:build :image \"sbcl\" :loaded-things \"%LOB_ASD_E%\" :output-path \"%LOB_EXE_E%\" :format-error t)^
+(if (com.inuoe.lob/commands/build:build :image \"sbcl\" :loaded-things \"%LOB_ASD_E%\" :output-path \"%LOB_EXE_E%\" :format-error t)^
   (sb-ext:exit :code 0)^
   (sb-ext:exit :code 1))
 
@@ -26,7 +26,7 @@
  --load "%SRC_DIR%uiop.lisp"^
  --load "%SRC_DIR%asdf.lisp"^
  --eval "(asdf:load-asd #p""%LOB_ASD_E%\"")"^
- --eval "(asdf:load-system '#:com.inuoe.lob)"^
+ --eval "(asdf:load-system '#:com.inuoe.lob/commands/build)"^
  --eval "%BUILD_EXP%"
 @if %errorlevel% neq 0 exit /b %errorlevel%
 

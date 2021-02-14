@@ -1,10 +1,9 @@
-(defpackage #:com.inuoe.lob-new
+(defpackage #:com.inuoe.lob/commands/new
   (:use #:cl)
   (:export
    #:*lob-new-stdout*
    #:make-project))
-
-(in-package #:com.inuoe.lob-new)
+(in-package #:com.inuoe.lob/commands/new)
 
 (defvar *lob-new-stdout* (make-synonym-stream '*standard-output*))
 
