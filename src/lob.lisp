@@ -102,9 +102,9 @@
     :finally
        (unless dir
          (lose "lob new: missing output directory"))
-       (let ((new:*lob-new-stdout* (if verbose *standard-output* (make-broadcast-stream))))
-         (return (new:make-project dir :name name :prefix prefix :description description
-                                       :author author :email email :license license)))))
+       (return (new:make-project dir :name name :prefix prefix :description description
+                                     :author author :email email :license license
+                                     :verbose verbose))))
 
 (defun parse-entry-name (name)
   "Parses out `name' into a package and symbol name.

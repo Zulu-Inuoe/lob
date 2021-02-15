@@ -1,11 +1,8 @@
 (defpackage #:com.inuoe.lob/commands/new
   (:use #:cl)
   (:export
-   #:*lob-new-stdout*
    #:make-project))
 (in-package #:com.inuoe.lob/commands/new)
-
-(defvar *lob-new-stdout* (make-synonym-stream '*standard-output*))
 
 (defun user-full-name ()
   "Try to infer the current user's name from their git setting or $USER or $USERNAME"
@@ -39,14 +36,17 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 OR OTHER DEALINGS IN THE SOFTWARE.
 "
-          (nth-value 5 (cl:get-decoded-time))
+          (nth-value 5 (get-decoded-time))
           author))
 
 (defun make-project (dir
                      &key
                        name description prefix author email license type
-                       dependencies
-                     &aux prefix.name license-fn)
+                       dependencies verbose
+                     &aux
+                       prefix.name
+                       license-fn
+                       (stdout (if verbose *standard-output* (make-broadcast-stream))))
   (setf dir (uiop:ensure-directory-pathname dir)
         name (or name (car (last (pathname-directory dir))))
         (values prefix name)
@@ -72,8 +72,8 @@ OR OTHER DEALINGS IN THE SOFTWARE.
                ((member type '("l" "lib" "library") :test #'string-equal) :lib)
                (t (error "Unknown type '~A'" type))))
 
-  (format *lob-new-stdout* "lob: Creating project in directory ~A" dir)
-  (format *lob-new-stdout* "  name:~A~%  prefix: ~A~%" name prefix)
+  (format stdout "lob: Creating project in directory ~A" dir)
+  (format stdout "  name:~A~%  prefix: ~A~%" name prefix)
 
   (ensure-directories-exist dir)
   (with-open-file (readme (uiop:merge-pathnames* (make-pathname :name "README" :type "md") dir)
